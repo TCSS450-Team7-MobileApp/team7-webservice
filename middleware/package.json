@@ -1,0 +1,4 @@
+{ 
+    "name" : "middleware",
+    "main" : "./exports.js" 
+}
