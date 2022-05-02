@@ -31,7 +31,7 @@ app.get("/", (request, response) => {
     response.writeHead(200, {'Content-Type': 'text/html'});
     
     //write a response to the client
-    response.write('<h style="color:blue">This Heroku belongs to Chatterbug!</h>'); 
+    response.write('<h style="color:blue">This Heroku belongs to Chatterbug2!</h>'); 
     
     response.end(); //end the response
 });
