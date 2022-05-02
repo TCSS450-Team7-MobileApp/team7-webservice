@@ -1,7 +1,7 @@
 {
-  "name": "450-lab",
+  "name": "450-team7",
   "version": "1.0.0",
-  "description": "TCSS 450 Lab for creating a webservice",
+  "description": "TCSS 450 Team 7 Web Service",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -15,8 +15,8 @@
     "Mobile",
     "Apps"
   ],
-  "author": "TCSS 450",
-  "license": "MIT",
+  "author": "TCSS 450 Team 7",
+  "license": "TCSS 450",
   "dependencies": {
     "express": "^4.17.1",
     "form-data": "^3.0.0",

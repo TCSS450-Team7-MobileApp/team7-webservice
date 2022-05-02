@@ -114,7 +114,7 @@ router.post('/', (request, response, next) => {
                     success: true,
                     email: request.body.email
                 }) // TESTING VERIFICATION:
-                sendEmail("cparkh@uw.edu", request.body.email, "TEST: Welcome to our App!", "Please verify your Email account.")
+                sendEmail("$3", request.body.email, "TEST: Welcome to our App!", "Please verify your Email account.")
             })
             .catch((error) => {
                 //log the error for debugging
