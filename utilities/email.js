@@ -1,7 +1,7 @@
-const nodemailder = require('nodemailder');
+const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 
-const transporter = nodemailder.createTransport({
+const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: process.env.EMAIL_USERNAME,
