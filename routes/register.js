@@ -19,6 +19,15 @@ const sendEmail = require('../utilities').sendEmail;
 
 const router = express.Router();
 
+// let token = jwt.sign(
+//     {
+//         email: email,
+//     },
+//     // generate token here
+//     'ourSecretKey',
+//     { expiresIn: '10m' }
+// );
+
 /**
  * @api {post} /register Request to register a user
  * @apiName PostRegister
@@ -118,14 +127,7 @@ router.post(
         let theQuery =
             'INSERT INTO CREDENTIALS(MemberId, SaltedHash, Salt) VALUES ($1, $2, $3)';
         let values = [request.memberid, salted_hash, salt];
-        const token = jwt.sign(
-            {
-                email: email,
-            },
-            // generate token here
-            'ourSecretKey',
-            { expiresIn: '10m' }
-        );
+
         pool.query(theQuery, values)
             .then((result) => {
                 //We successfully added the user!
@@ -134,7 +136,7 @@ router.post(
                     email: request.body.email,
                 }); // TESTING VERIFICATION:
                 const link =
-                    'https://tcss450-team7.herokuapp.com/verify?token=' + token;
+                    'https://tcss450-team7.herokuapp.com/verify?token=ourSecretKey';
                 sendEmail(
                     process.env.EMAIL_USERNAME,
                     request.body.email,
