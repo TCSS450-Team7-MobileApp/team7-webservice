@@ -20,8 +20,8 @@ const sendEmail = require('../utilities').sendEmail;
 const router = express.Router();
 
 /**
- * @api {post} /auth Request to register a user
- * @apiName PostAuth
+ * @api {post} /register Request to register a user
+ * @apiName PostRegister
  * @apiGroup Auth
  *
  * @apiParam {String} first a users first name
@@ -62,14 +62,6 @@ router.post(
             : request.body.email;
         const email = request.body.email;
         const password = request.body.password;
-        const token = jwt.sign(
-            {
-                email: email,
-            },
-            // generate token here
-            'ourSecretKey',
-            { expiresIn: '10m' }
-        );
 
         //Verify that the caller supplied all the parameters
         //In js, empty strings or null values evaluate to false
@@ -126,6 +118,14 @@ router.post(
         let theQuery =
             'INSERT INTO CREDENTIALS(MemberId, SaltedHash, Salt) VALUES ($1, $2, $3)';
         let values = [request.memberid, salted_hash, salt];
+        const token = jwt.sign(
+            {
+                email: email,
+            },
+            // generate token here
+            'ourSecretKey',
+            { expiresIn: '10m' }
+        );
         pool.query(theQuery, values)
             .then((result) => {
                 //We successfully added the user!
