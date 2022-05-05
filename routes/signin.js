@@ -20,7 +20,7 @@ const config = {
 /**
  * @api {get} /signin Request to sign a user in the system
  * @apiName GetSignin
- * @apiGroup Auth
+ * @apiGroup Signin
  *
  * @apiHeader {String} authorization "username:password" uses Basic Auth
  *

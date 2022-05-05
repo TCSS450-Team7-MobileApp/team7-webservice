@@ -31,7 +31,7 @@ const router = express.Router();
 /**
  * @api {post} /register Request to register a user
  * @apiName PostRegister
- * @apiGroup Auth
+ * @apiGroup Register
  *
  * @apiParam {String} first a users first name
  * @apiParam {String} last a users last name
