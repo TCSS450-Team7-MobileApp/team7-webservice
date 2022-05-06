@@ -1,15 +1,11 @@
 {
-    "name": "TCSS 450 Lab Web Service",
-    "version": "0.1.0",
-    "description": "The TCSS 450 Lab Web Service API Documentation",
-    "title": "Lab API Doc",
-    "url" : "https://cfb3-lab4-backend-2020sp.herokuapp.com",
-    "order": [
-      "Hello",
-      "Params",
-      "Wait",
-      "DemoSql",
-      "Auth",
-      "Phish"
-    ]
-  }
+  "name": "Chatterbug Web Service",
+  "version": "0.1.0",
+  "description": "The Chatterbug mobile app Web Service API Documentation",
+  "title": "Chatterbug API Doc",
+  "url": "https://tcss450-team7.herokuapp.com",
+  "order": [
+    "Signin",
+    "Register"
+  ]
+}
