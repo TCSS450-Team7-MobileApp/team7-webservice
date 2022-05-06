@@ -17,9 +17,9 @@ const sendEmail = require('../utilities').sendEmail
 const router = express.Router()
 
 /**
- * @api {post} /auth Request to register a user
- * @apiName PostAuth
- * @apiGroup Auth
+ * @api {post} /register Request to register a user
+ * @apiName PostRegister
+ * @apiGroup Register
  * 
  * @apiParam {String} first a users first name
  * @apiParam {String} last a users last name
@@ -113,8 +113,8 @@ router.post('/', (request, response, next) => {
                 response.status(201).send({
                     success: true,
                     email: request.body.email
-                }) // TESTING VERIFICATION:
-                sendEmail("$3", request.body.email, "TEST: Welcome to our App!", "Please verify your Email account.")
+                })
+                sendEmail("cparkh@uw.edu", request.body.email, "Welcome to our App!", "Please verify your Email account.")
             })
             .catch((error) => {
                 //log the error for debugging
@@ -134,20 +134,5 @@ router.post('/', (request, response, next) => {
                 })
             })
 })
-
-router.get('/hash_demo', (request, response) => {
-    let password = 'hello12345'
-
-    let salt = generateSalt(32)
-    let salted_hash = generateHash(password, salt)
-    let unsalted_hash = generateHash(password)
-
-    response.status(200).send({
-        'salt': salt,
-        'salted_hash': salted_hash,
-        'unsalted_hash': unsalted_hash
-    })
-})
-
 
 module.exports = router
