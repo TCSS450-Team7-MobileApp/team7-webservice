@@ -19,7 +19,7 @@ const router = express.Router()
  */
 
 /**
- * @api {get} /friends_list Display existing friends in database.
+ * @api {get} /friendsList Display existing friends in database.
  * @apiName GetFriends
  * @apiGroup Friends
  * 
