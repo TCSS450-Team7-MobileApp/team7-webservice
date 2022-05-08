@@ -35,20 +35,22 @@ const router = express.Router()
  * @apiError (400: SQL Error) {String} the reported SQL error details
  * 
  * @apiUse JSONError
+ * 
+ * Call this query with BASE_URL/friendsList/USERNAME
  */
-router.get("/friendsList", (request, response, next) => {
-        // validate userId of user requesting friends list
-        if(request.params.userId === undefined) {
+router.get('/:memberid?', (request, response, next) => {
+        // validate memberid of user requesting friends list
+        if(request.params.memberid === undefined) {
             response.status(400).send({
-                message: "no userId request sent!"
+                message: "no memberid request sent!"
             })
         } else {
             next()
         }
     }, (request, response, next) => {
-        // validate that the userId exists
+        // validate that the memberid exists
         let query = `SELECT * FROM Credentials WHERE MemberID=$1`
-        let values = [request.params.userId]
+        let values = [request.params.memberid]
 
         pool.query(query, values)
             .then(result => {
@@ -65,21 +67,21 @@ router.get("/friendsList", (request, response, next) => {
                         FROM Contacts INNER JOIN Members ON Members.MemberID = Contacts.MemberID_A 
                         WHERE MemberID_A=$1
                         ORDER BY LastName ASC`
-        let values = [request.params.userId]
+        let values = [request.params.memberid]
 
         pool.query(query, values)
             .then(result => {
                 response.send({
-                    userId: request.params.userId,
+                    userId: request.params.memberid,
                     rowCount: result.rowCount,
                     rows: result.rows
+                    })
                 }).catch(err => {
                     response.status(400).send({
                         message: "SQL Error",
                         error: err
                     })
                 })
-            })
-});
+            });
 
 module.exports = router;
