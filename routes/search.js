@@ -25,7 +25,7 @@ const router = express.Router()
  * @apiName GetProfile
  * @apiGroup Profile
  * 
- * @apiDescription Request profile information for an unfriended user to display
+ * @apiDescription Search for user by email: Query to return a user's first, last, and nick name by email.
  * 
  * @apiParam {String} email the email to retrieve the profile from.
  * 
@@ -36,6 +36,8 @@ const router = express.Router()
  * @apiError (400: SQL Error) {String} the reported SQL error details
  * 
  * @apiUse JSONError
+ * 
+ * Call this query with BASE_URL/search/EMAIL
  */
 router.get("/:email?", (request, response, next) => {
         // validate userId of user requesting friends list
@@ -48,7 +50,7 @@ router.get("/:email?", (request, response, next) => {
         }
     }, (request, response) => {
         // Search for User by Email
-        let query = `SELECT FirstName, LastName FROM Members WHERE Email=$1`
+        let query = `SELECT FirstName, LastName, NickName FROM Members WHERE Email=$1`
         let values = [request.params.email]
 
         pool.query(query, values)
@@ -64,53 +66,6 @@ router.get("/:email?", (request, response, next) => {
             });
         });
     });
-
-/**
- * @api {get} /userId:?  search for an existing user by userName.
- * @apiName GetProfile
- * @apiGroup Profile
- * 
- * @apiDescription Request profile information for a friended user by Username
- * 
- * @apiParam {String} username the username to retrieve the profile from.
- * 
- * @apiSuccess {Object} the profile returned.
- * @apiSuccess {Number} rowCount the number of users found (should always be 1 for found, 0 for does not exist);
- * 
- * @apiError (404: userId not found) {String} message "userId not found"
- * @apiError (400: SQL Error) {String} the reported SQL error details
- * 
- * @apiUse JSONError
- */
- router.get("/:username?", (request, response, next) => {
-    // validate userId of user requesting friends list
-    if(request.params.email === undefined) {
-        response.status(400).send({
-            message: "no Username request sent!"
-        })
-    } else {
-        next()
-    }
-}, (request, response) => {
-    // Search for User by Email
-    let query = `SELECT FirstName, LastName, Username 
-                FROM Members JOIN Contacts ON Members.MemberID = Contacts.MemberID_A 
-                WHERE Username=$1`
-    let values = [request.params.email]
-
-    pool.query(query, values)
-    .then(result => {
-        response.status(200).send({
-            rows: result.rows
-        });
-    }).catch(err => {
-        console.log(err)
-        response.status(400).send({
-            result: "ERROR",
-            error: err
-        });
-    });
-});
 
 
 module.exports = router;

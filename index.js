@@ -41,7 +41,7 @@ app.get("/", (request, response) => {
 */
 app.use("/register", require("./routes/register.js"))
 app.use("/signin", require("./routes/signin.js"))
-app.use("/profile", require("./routes/profile.js"))
+app.use("/search", require("./routes/search.js"))
 app.use("/friendsList", require("./routes/friendsList.js"))
 
 /*
