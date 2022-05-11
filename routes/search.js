@@ -50,7 +50,7 @@ router.get("/:email?", (request, response, next) => {
         }
     }, (request, response) => {
         // Search for User by Email
-        let query = `SELECT FirstName, LastName, NickName FROM Members WHERE Email=$1`
+        let query = `SELECT FirstName, LastName, Username FROM Members WHERE Email=$1`
         let values = [request.params.email]
 
         pool.query(query, values)
