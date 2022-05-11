@@ -3,6 +3,7 @@
  */
 
 //express is the framework we're going to use to handle requests
+const { response } = require('express')
 const express = require('express')
 
 //Access the connection to Heroku Database
@@ -83,5 +84,42 @@ router.get('/:memberid?', (request, response, next) => {
                     })
                 })
             });
+
+/**
+ * @api {put} /friendsList/delete/:username? Remove a friend from friend's list
+ * @apiName deleteFriends
+ * @apiGroup Friends
+ * 
+ * @apiParam {String} MemberA the username of the Member requesting deletion
+ * @apiParam {String} MemberB the username of the user being deleted from MemberA's friendsList
+ * 
+ * @apiDescription a query to delete a friend from friendsList
+ * 
+ * @apiSuccess (200) {String} message "user deleted from friendsList"
+ * 
+ *  @apiError (404: username not found) {String} message "username not found"
+ * 
+ * NOTE: To use this query, the URL should be BASE_URL/friendsList/delete/:username? 
+ * where :username? is the current user. The app should pass in the body the username of the user to be removed.
+ */
+router.put("/delete/:username?", (request, response) => {
+    let query = `DELETE FROM Contacts WHERE 
+                MemberID_A=(SELECT MemberID FROM Members WHERE Username=$1) 
+                AND MemberID_B=(SELECT MemberID FROM Members WHERE Username=$2)`
+    let values = [request.params.username, request.body.MemberB]
+
+    pool.query(query, values)
+    .then(result => {
+        response.status(200).send({
+            message: "Friend successfully deleted"
+        }).catch(err => {
+            console.log("error deleting: " + err)
+            response.status(400).send({
+                message: 'Error deleting user from friendsList'
+            });
+        });
+    });
+});
+
 
 module.exports = router;
