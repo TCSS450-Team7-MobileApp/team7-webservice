@@ -65,7 +65,7 @@ router.get('/:memberid?', (request, response, next) => {
     }, (request, response) => {
         // perform the Select*
         let query = `SELECT Members.FirstName AS FirstName, Members.LastName AS LastName, Members.Username AS Username, Members.Email AS Email
-                        FROM Contacts INNER JOIN Members ON Members.MemberID = Contacts.MemberID_A 
+                        FROM Contacts LEFT JOIN Members ON Members.MemberID = Contacts.MemberID_B 
                         WHERE MemberID_A=$1
                         ORDER BY LastName ASC`
         let values = [request.params.memberid]
@@ -86,6 +86,8 @@ router.get('/:memberid?', (request, response, next) => {
             });
 
 /**
+ * NOTE: THIS QUERY DOES NOT REQUIRE AUTHORIZATION
+ * sl
  * @api {put} /friendsList/delete/:username? Remove a friend from friend's list
  * @apiName deleteFriends
  * @apiGroup Friends
