@@ -121,5 +121,4 @@ router.put("/delete/:username?", (request, response) => {
     });
 });
 
-
 module.exports = router;
