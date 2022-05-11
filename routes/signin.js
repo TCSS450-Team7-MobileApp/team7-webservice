@@ -81,6 +81,17 @@ router.get(
             });
         }
     },
+    (request, response, next) => {
+        const query = 'SELECT MemberID FROM Members WHERE Verification=1';
+        pool.query(query).then((result) => {
+            if (result.rowCount === 0) {
+                response.status(401).send({
+                    message: 'Please verify your email address',
+                });
+                return;
+            } else next();
+        });
+    },
     (request, response) => {
         const theQuery = `SELECT saltedhash, salt, Credentials.memberid FROM Credentials
                       INNER JOIN Members ON

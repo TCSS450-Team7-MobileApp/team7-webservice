@@ -5,6 +5,9 @@ const express = require('express');
 
 // JWT for verification link
 const jwt = require('jsonwebtoken');
+const config = {
+    secret: process.env.JSON_WEB_TOKEN,
+};
 
 //Access the connection to Heroku Database
 const pool = require('../utilities').pool;
@@ -135,8 +138,25 @@ router.post(
                     success: true,
                     email: request.body.email,
                 }); // TESTING VERIFICATION:
-                const link =
-                    'https://tcss450-team7.herokuapp.com/verify?token=ourSecretKey';
+
+                // Make JWT token
+                const token = jwt.sign(
+                    {
+                        memberid: request.memberid,
+                        email: request.body.email,
+                    },
+                    config.secret,
+                    {
+                        expiresIn: '1d',
+                    }
+                );
+
+                // For Production
+                // const link = `https://tcss450-team7.herokuapp.com/verify/${token}`;
+
+                // For local testing
+                const link = `http://localhost:5000/verify/${token}`;
+
                 sendEmail(
                     process.env.EMAIL_USERNAME,
                     request.body.email,
