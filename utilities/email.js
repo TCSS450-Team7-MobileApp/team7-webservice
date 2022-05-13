@@ -50,7 +50,7 @@ const emailTemplate = (link) => `
     <h1>Welcome to Chatterbug!</h1>
     <p>Hi there!</p>
     <p>Please verify your email address before logging in to our app</p>
-    <form action="https://lammai.github.io">
+    <form action="${link}">
       <button class="btn" type="submit" 
               style="
                 background-color: #e1ecf4;
