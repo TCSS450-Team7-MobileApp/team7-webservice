@@ -184,18 +184,4 @@ router.post(
     }
 );
 
-router.get('/hash_demo', (request, response) => {
-    let password = 'hello12345';
-
-    let salt = generateSalt(32);
-    let salted_hash = generateHash(password, salt);
-    let unsalted_hash = generateHash(password);
-
-    response.status(200).send({
-        salt: salt,
-        salted_hash: salted_hash,
-        unsalted_hash: unsalted_hash,
-    });
-});
-
-module.exports = router;
+module.exports = router
