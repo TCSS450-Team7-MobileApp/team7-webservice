@@ -82,13 +82,15 @@ router.get(
         }
     },
     (request, response, next) => {
-        const query = 'SELECT MemberID FROM Members WHERE Verification=1';
-        pool.query(query).then((result) => {
+        const query =
+            'SELECT MemberID FROM Members WHERE Email=$1 AND Verification=1';
+        const value = [request.auth.email];
+        pool.query(query, value).then((result) => {
             if (result.rowCount === 0) {
                 response.status(401).send({
+                    email: request.auth.email,
                     message: 'Please verify your email address',
                 });
-                return;
             } else next();
         });
     },

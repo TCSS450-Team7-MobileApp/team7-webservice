@@ -29,7 +29,7 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-let sendEmail = (from, to, subject, text) => {
+let sendEmail = (from, to, subject, html) => {
     //research nodemailer for sending email from node.
     // https://nodemailer.com/about/
     // https://www.w3schools.com/nodejs/nodejs_email.asp
@@ -37,13 +37,44 @@ let sendEmail = (from, to, subject, text) => {
     //make sure you add the password to the environmental variables
     //similar to the DATABASE_URL and PHISH_DOT_NET_KEY (later section of the lab)
 
-    transporter.sendMail({ from, to, subject, text }, function (error, info) {
+    transporter.sendMail({ from, to, subject, html }, function (error, info) {
         if (error) throw Error(error);
         console.log('Email sent successfully');
         console.log(info);
     });
 };
 
+const emailTemplate = (link) => `
+<html>
+  <div>
+    <h1>Welcome to Chatterbug!</h1>
+    <p>Hi there!</p>
+    <p>Please verify your email address before logging in to our app</p>
+    <form action="https://lammai.github.io">
+      <button class="btn" type="submit" 
+              style="
+                background-color: #e1ecf4;
+                border-radius: 20px;
+                border: 1px solid #7aa7c7;
+                box-sizing: border-box;
+                color: #39739d;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 400;
+                margin: 0;
+                padding: 6px .6em;
+                position: relative;
+                text-align: center;
+                text-decoration: none;"
+              >Verify Email</button>
+    </form>
+  </div>
+</html>
+
+
+`;
+
 module.exports = {
     sendEmail,
+    emailTemplate,
 };

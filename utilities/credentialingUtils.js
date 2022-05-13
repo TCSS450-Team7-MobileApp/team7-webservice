@@ -1,6 +1,5 @@
 //We use this create the SHA256 hash
 const crypto = require('crypto');
-const { pool } = require('./exports');
 
 /**
  * Creates a salted and hashed string of hexadecimal characters. Used to encrypt

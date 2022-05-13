@@ -21,6 +21,7 @@ const generateHash = require('../utilities').generateHash;
 const generateSalt = require('../utilities').generateSalt;
 
 const sendEmail = require('../utilities').sendEmail;
+const emailTemplate = require('../utilities').emailTemplate;
 
 const router = express.Router();
 
@@ -168,16 +169,16 @@ router.post(
                 );
 
                 // For Production
-                // const link = `https://tcss450-team7.herokuapp.com/verify/${token}`;
+                const link = `https://tcss450-team7.herokuapp.com/verify/${token}`;
 
                 // For local testing
-                const link = `http://localhost:5000/verify/${token}`;
+                // const link = `http://localhost:5000/verify/${token}`;
 
                 sendEmail(
                     process.env.EMAIL_USERNAME,
                     request.body.email,
                     'Chatterbug: Welcome to our App!',
-                    `Please verify your Email account using this link: ${link}`
+                    emailTemplate(link)
                 );
             })
             .catch((error) => {
