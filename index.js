@@ -39,12 +39,19 @@ app.get('/', (request, response) => {
 
 /*
 * Allows express to post and get registration and signin.
+
+* NOTE: Add a JWT middleware.
 */
 app.use("/register", require("./routes/register.js"))
 app.use("/signin", require("./routes/signin.js"))
 app.use("/search", require("./routes/search.js"))
-app.use("/friendsList", require("./routes/friendsList.js"))
+app.use("/friendsList",  middleware.checkToken, require("./routes/friendsList.js"))
+app.use("/friendsList/request",  middleware.checkToken, require("./routes/friendsList.js"))
+app.use("/friendsList/verify",  middleware.checkToken, require("./routes/friendsList.js"))
 app.use("/account", require("./routes/account.js"))
+app.use('/messages', middleware.checkToken, require('./routes/messages.js'))
+app.use('/chats', middleware.checkToken, require('./routes/chats.js')) 
+app.use('/auth', middleware.checkToken, require('./routes/pushyregister.js')) 
 
 
 /*
