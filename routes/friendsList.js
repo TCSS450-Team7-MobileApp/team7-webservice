@@ -85,6 +85,57 @@ router.get('/:memberid?', (request, response, next) => {
                 })
             });
 
+/** 
+ * @api {post} /friendsList/request/:username? Send a friend request
+ * @apiName friendRequest
+ * @apiGroup Friends
+ * 
+ * @apiParam {String} MemberA the username of the Member requesting a friend
+ * @apiParam {String} MemberB the username of the user being requested as a friend
+ * 
+ * @apiDescription a post to initiate a friend request
+ * 
+ * @apiSuccess (200) {String} message "friend request sent"
+ * 
+ * @apiError (404: username not found) {String} message: "username not found"
+ * 
+ * To use this query, the URL should be BASE_URL/friendsList/request/:username?
+ * where :username? is the current user
+ */
+router.post("/request/:username?", middleware.checkToken, (request, response, next) => {
+    // middleware will check that the requester is using a valid token
+
+    // verify that the requester is a valid user
+    let query = "SELECT Username FROM Members WHERE Username=$1"
+    let values = [request.body.username]
+
+    pool.query(query, values)
+    .then(result => {
+        next()
+        }).catch(err => {
+            console.log("error deleting: " + err)
+            response.status(400).send({
+                message: 'Current username does not exist'
+            })
+        })
+}), (request, response) => {
+    // insert new unverified friend 
+    let query = 'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0)'
+    let values = [request.params.username, request.body.username]
+
+    pool.query(query, values)
+    .then(result => {
+        response.status(200).send({
+            message: "Friend request successfully sent"
+        }).catch(err => {
+            console.log("error adding: " + err)
+            response.status(400).send({
+                message: 'SQL Error: Insert failed'
+            });
+        });
+    })
+}
+
 /**
  * NOTE: THIS QUERY DOES NOT REQUIRE AUTHORIZATION
  * sl
@@ -104,7 +155,10 @@ router.get('/:memberid?', (request, response, next) => {
  * NOTE: To use this query, the URL should be BASE_URL/friendsList/delete/:username? 
  * where :username? is the current user. The app should pass in the body the username of the user to be removed.
  */
-router.put("/delete/:username?", (request, response) => {
+router.delete("/delete/:username?",  middleware.checkToken, (request, response) => {
+
+    // middleware.checkToken will verify that MemberID_A is the requester
+    
     let query = `DELETE FROM Contacts WHERE 
                 MemberID_A=(SELECT MemberID FROM Members WHERE Username=$1) 
                 AND MemberID_B=(SELECT MemberID FROM Members WHERE Username=$2)`

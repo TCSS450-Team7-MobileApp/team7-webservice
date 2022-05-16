@@ -53,4 +53,11 @@ router.put('/delete/:email?', (request, response, next) => {
     });
 });
 
+/**
+ * CHANGE PASSWORD
+ */
+router.put('/update_pass', (request, response, next) => {
+    const new_pass = get.body.new_pass;
+});
+
 module.exports = router;

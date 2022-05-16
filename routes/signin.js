@@ -114,7 +114,7 @@ router.get('/', (request, response, next) => {
                     token: token
                 })
             } else {
-                //credentials dod not match
+                //credentials did not match
                 response.status(400).send({
                     message: 'Credentials did not match' 
                 })
