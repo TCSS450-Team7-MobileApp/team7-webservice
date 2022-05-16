@@ -49,8 +49,8 @@ app.use("/friendsList",  middleware.checkToken, require("./routes/friendsList.js
 app.use("/friendsList/request",  middleware.checkToken, require("./routes/friendsList.js"))
 app.use("/friendsList/verify",  middleware.checkToken, require("./routes/friendsList.js"))
 app.use("/account", require("./routes/account.js"))
-app.use('/messages', middleware.checkToken, require('./routes/messages.js')) 
-app.use('/chats', middleware.checkToken, require('./routes/chats.js'))
+app.use('/messages', middleware.checkToken, require('./routes/messages.js'))
+app.use('/chats', middleware.checkToken, require('./routes/chats.js')) 
 app.use('/auth', middleware.checkToken, require('./routes/pushyregister.js')) 
 
 
