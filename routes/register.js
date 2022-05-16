@@ -5,17 +5,23 @@ const express = require('express');
 
 // JWT for verification link
 const jwt = require('jsonwebtoken');
+const config = {
+    secret: process.env.JSON_WEB_TOKEN,
+};
 
 //Access the connection to Heroku Database
 const pool = require('../utilities').pool;
 
 const validation = require('../utilities').validation;
 let isStringProvided = validation.isStringProvided;
+const validateEmail = validation.validateEmail;
+const validatePassword = validation.validatePassword;
 
 const generateHash = require('../utilities').generateHash;
 const generateSalt = require('../utilities').generateSalt;
 
 const sendEmail = require('../utilities').sendEmail;
+const emailTemplate = require('../utilities').emailTemplate;
 
 const router = express.Router();
 
@@ -75,47 +81,61 @@ router.post(
         //Verify that the caller supplied all the parameters
         //In js, empty strings or null values evaluate to false
         if (
-            isStringProvided(first) &&
-            isStringProvided(last) &&
-            isStringProvided(username) &&
-            isStringProvided(email) &&
-            isStringProvided(password)
+            !(
+                isStringProvided(first) &&
+                isStringProvided(last) &&
+                isStringProvided(username) &&
+                isStringProvided(email) &&
+                isStringProvided(password)
+            )
         ) {
-            //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
-            //If you want to read more: https://stackoverflow.com/a/8265319
-            let theQuery =
-                'INSERT INTO MEMBERS(FirstName, LastName, Username, Email) VALUES ($1, $2, $3, $4) RETURNING Email, MemberID';
-            let values = [first, last, username, email];
-            pool.query(theQuery, values)
-                .then((result) => {
-                    //stash the memberid into the request object to be used in the next function
-                    request.memberid = result.rows[0].memberid;
-                    next();
-                })
-                .catch((error) => {
-                    //log the error  for debugging
-                    // console.log("Member insert")
-                    // console.log(error)
-                    if (error.constraint == 'members_username_key') {
-                        response.status(400).send({
-                            message: 'Username exists',
-                        });
-                    } else if (error.constraint == 'members_email_key') {
-                        response.status(400).send({
-                            message: 'Email exists',
-                        });
-                    } else {
-                        response.status(400).send({
-                            message: 'other error, see detail',
-                            detail: error.detail,
-                        });
-                    }
-                });
-        } else {
             response.status(400).send({
                 message: 'Missing required information',
             });
+            return;
         }
+        if (!validateEmail(email)) {
+            response.status(400).send({
+                message: 'Invalid email',
+            });
+            return;
+        }
+        if (!validatePassword(password)) {
+            response.status(400).send({
+                message: 'Invalid password',
+            });
+            return;
+        }
+        //We're using placeholders ($1, $2, $3) in the SQL query string to avoid SQL Injection
+        //If you want to read more: https://stackoverflow.com/a/8265319
+        let theQuery =
+            'INSERT INTO MEMBERS(FirstName, LastName, Username, Email) VALUES ($1, $2, $3, $4) RETURNING Email, MemberID';
+        let values = [first, last, username, email];
+        pool.query(theQuery, values)
+            .then((result) => {
+                //stash the memberid into the request object to be used in the next function
+                request.memberid = result.rows[0].memberid;
+                next();
+            })
+            .catch((error) => {
+                //log the error  for debugging
+                // console.log("Member insert")
+                // console.log(error)
+                if (error.constraint == 'members_username_key') {
+                    response.status(400).send({
+                        message: 'Username exists',
+                    });
+                } else if (error.constraint == 'members_email_key') {
+                    response.status(400).send({
+                        message: 'Email exists',
+                    });
+                } else {
+                    response.status(400).send({
+                        message: 'other error, see detail',
+                        detail: error.detail,
+                    });
+                }
+            });
     },
     (request, response) => {
         //We're storing salted hashes to make our application more secure
@@ -135,13 +155,30 @@ router.post(
                     success: true,
                     email: request.body.email,
                 }); // TESTING VERIFICATION:
-                const link =
-                    'https://tcss450-team7.herokuapp.com/verify?token=ourSecretKey';
+
+                // Make JWT token
+                const token = jwt.sign(
+                    {
+                        memberid: request.memberid,
+                        email: request.body.email,
+                    },
+                    config.secret,
+                    {
+                        expiresIn: '1d',
+                    }
+                );
+
+                // For Production
+                const link = `https://tcss450-team7.herokuapp.com/verify/${token}`;
+
+                // For local testing
+                // const link = `http://localhost:5000/verify/${token}`;
+
                 sendEmail(
                     process.env.EMAIL_USERNAME,
                     request.body.email,
-                    'Chatterbug: Welcome to our App!',
-                    `Please verify your Email account using this link: ${link}`
+                    'Chatterbug: Account confirmation',
+                    emailTemplate(link)
                 );
             })
             .catch((error) => {
@@ -163,19 +200,5 @@ router.post(
             });
     }
 );
-
-router.get('/hash_demo', (request, response) => {
-    let password = 'hello12345';
-
-    let salt = generateSalt(32);
-    let salted_hash = generateHash(password, salt);
-    let unsalted_hash = generateHash(password);
-
-    response.status(200).send({
-        salt: salt,
-        salted_hash: salted_hash,
-        unsalted_hash: unsalted_hash,
-    });
-});
 
 module.exports = router;

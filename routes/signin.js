@@ -81,8 +81,21 @@ router.get(
             });
         }
     },
+    (request, response, next) => {
+        const query =
+            'SELECT MemberID FROM Members WHERE Email=$1 AND Verification=1';
+        const value = [request.auth.email];
+        pool.query(query, value).then((result) => {
+            if (result.rowCount === 0) {
+                response.status(401).send({
+                    email: request.auth.email,
+                    message: 'Please verify your email address',
+                });
+            } else next();
+        });
+    },
     (request, response) => {
-        const theQuery = `SELECT saltedhash, salt, Credentials.memberid FROM Credentials
+        const theQuery = `SELECT firstname, lastname, username, saltedhash, salt, Credentials.memberid FROM Credentials
                       INNER JOIN Members ON
                       Credentials.memberid=Members.memberid 
                       WHERE Members.email=$1`;
@@ -126,6 +139,10 @@ router.get(
                         success: true,
                         message: 'Authentication successful!',
                         token: token,
+                        firstname: result.rows[0].firstname,
+                        lastname: result.rows[0].lastname,
+                        username: result.rows[0].username,
+                        memberid: result.rows[0].memberid
                     });
                 } else {
                     //credentials dod not match
