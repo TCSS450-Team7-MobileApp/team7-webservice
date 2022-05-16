@@ -9,7 +9,8 @@ const generateSalt = credUtils.generateSalt;
 const validation = require('./validationUtils.js');
 
 const sendEmail = require('./email.js').sendEmail;
-let messaging = require('./pushy_utilities.js') 
+const emailTemplate = require('./email.js').emailTemplate;
+let messaging = require('./pushy_utilities.js');
 
 module.exports = {
     pool,
@@ -17,5 +18,6 @@ module.exports = {
     generateSalt,
     validation,
     sendEmail,
-    messaging
+    emailTemplate,
+    messaging,
 };
