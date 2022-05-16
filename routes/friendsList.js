@@ -87,7 +87,8 @@ router.get('/:memberid?', (request, response, next) => {
                         error: err
                     })
                 })
-            });
+});
+
 
 /** 
  * @api {post} /friendsList/request/:memberid? Send a friend request
@@ -109,13 +110,13 @@ router.get('/:memberid?', (request, response, next) => {
 router.post("/request/:memberid?", middleware.checkToken, (request, response, next) => {
     // middleware will check that the requester is using a valid token
 
-    // verify that the requester is a valid user
+    // verify that the requested contact is a valid user
     let query = "SELECT * FROM Members WHERE MemberID=$1"
     let values = [request.body.memberid]
-
+    
     pool.query(query, values)
     .then(result => {
-        if (result.rows==0) {
+        if (result.rowCount==0) {
             response.status(400).send({
                 message: 'memberid not found!'
             })
@@ -129,7 +130,7 @@ router.post("/request/:memberid?", middleware.checkToken, (request, response, ne
                 message: 'SQL error'
             })
         })
-}), (request, response) => {
+}, (request, response) => { 
     // insert new unverified friend 
     let query = 'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0), (DEFAULT, $2, $1, 0)'
     let values = [request.params.memberid, request.body.memberid]
@@ -138,14 +139,14 @@ router.post("/request/:memberid?", middleware.checkToken, (request, response, ne
     .then(result => {
         response.status(200).send({
             message: "Friend request successfully sent"
-        }).catch(err => {
+        })
+    }).catch(err => {
             console.log("error adding: " + err)
             response.status(400).send({
                 message: 'SQL Error: Insert failed'
             });
         });
-    })
-}
+});
 
 /** 
  * @api {post} /friendsList/verify/:memberid? Verify
@@ -169,20 +170,20 @@ router.post("/request/:memberid?", middleware.checkToken, (request, response, ne
  router.post("/verify/:memberid?", middleware.checkToken, (request, response, next) => {
     // middleware will check that the requester is using a valid token
 
-    // verify that the requester is a valid user
-    let query = "SELECT * FROM Members WHERE Memberid=$1"
+    // verify that the requested contact is a valid user
+    let query = "SELECT * FROM Members WHERE MemberID=$1"
     let values = [request.body.memberid]
 
     pool.query(query, values)
     .then(result => {
         next()
         }).catch(err => {
-            console.log("error deleting: " + err)
+            console.log("error getting memberid: " + err)
             response.status(400).send({
-                message: 'Current memberid does not exist'
+                message: 'Requested memberid does not exist!'
             })
         })
-}), (request, response, next) => {
+}, (request, response, next) => {
     // verify that a pending friend request currently exists
     let query = `SELECT MemberID_A, MemberID_B, Verified FROM Contacts WHERE MemberID_A=$1 AND MemberID_B=$2`
     let values = [request.params.memberid, request.body.memberid]
@@ -191,42 +192,43 @@ router.post("/request/:memberid?", middleware.checkToken, (request, response, ne
     .then(result => {
         //stash the memberid's into the request object to be used in the next function
         request.memberid_a = result.rows[0].memberid_a
-        request.memberid_b = result.rows[1].memberid_b
-        request.verified = result.rows[2].verified
+        request.memberid_b = result.rows[0].memberid_b
+        request.verified = result.rows[0].verified
         if (result.rows == 0) {
             response.status(400).send({
                 message: 'No pending friend request found'
             })
         }
         else if (request.verified!=0) {
+            console.log(request.verified)
             response.status(400).send({
                 message: 'Users have already been verified'
             })
         } else {
             next()
         }}).catch(err => {
-            console.log("error deleting: " + err)
+            console.log("error getting stashed memberids: " + err)
             response.status(400).send({
-                message: 'Current memberid does not exist'
+                message: 'Stashed memberid does not exist'
             })
         })
 },  (request, response) => {
     // update the existing friend
-    let query = 'UPDATE Contacts SET Verified=1 WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$2)'
+    let query = 'UPDATE Contacts SET Verified=1 WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$1)'
     let values = [request.memberid_a, request.memberid_b]
 
     pool.query(query, values)
     .then(result => {
         response.status(200).send({
             message: 'Friend verification successful'
-        }).catch(err => {
+        })
+    }).catch(err => {
             console.log("SQL Error verifying friend")
             response.status(400).send({
                 message: 'SQL error updating verification in Contacts table'
             })
         })
-    })
-}
+});
 
 
 /**

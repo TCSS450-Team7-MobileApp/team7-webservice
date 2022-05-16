@@ -46,6 +46,8 @@ app.use("/register", require("./routes/register.js"))
 app.use("/signin", require("./routes/signin.js"))
 app.use("/search", require("./routes/search.js"))
 app.use("/friendsList",  middleware.checkToken, require("./routes/friendsList.js"))
+app.use("/friendsList/request",  middleware.checkToken, require("./routes/friendsList.js"))
+app.use("/friendsList/verify",  middleware.checkToken, require("./routes/friendsList.js"))
 app.use("/account", require("./routes/account.js"))
 
 
