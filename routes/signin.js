@@ -142,7 +142,7 @@ router.get(
                         firstname: result.rows[0].firstname,
                         lastname: result.rows[0].lastname,
                         username: result.rows[0].username,
-                        members: result.rows[0].memberid
+                        memberid: result.rows[0].memberid
                     });
                 } else {
                     //credentials dod not match
