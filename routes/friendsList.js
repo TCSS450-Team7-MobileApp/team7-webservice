@@ -136,6 +136,104 @@ router.post("/request/:username?", middleware.checkToken, (request, response, ne
     })
 }
 
+/** 
+ * @api {post} /friendsList/verify/:username? Verify
+ * @apiName friendRequest
+ * @apiGroup Friends
+ * 
+ * @apiParam {String} MemberA the username of the Member requesting a friend
+ * @apiParam {String} MemberB the username of the user being requested as a friend
+ * 
+ * @apiDescription a post to initiate a friend request
+ * 
+ * @apiSuccess (200) {String} message "friend request sent"
+ * 
+ * @apiError (404: username not found) {String} message: "username not found"
+ * 
+ * To use this query, the URL should be BASE_URL/friendsList/verify/:username?
+ * where :username? is the current user
+ * 
+ * Verified: 0=pending, 1=verified
+ */
+ router.post("/verify/:username?", middleware.checkToken, (request, response, next) => {
+    // middleware will check that the requester is using a valid token
+
+    // verify that the requester is a valid user
+    let query = "SELECT Username FROM Members WHERE Username=$1"
+    let values = [request.body.username]
+
+    pool.query(query, values)
+    .then(result => {
+        next()
+        }).catch(err => {
+            console.log("error deleting: " + err)
+            response.status(400).send({
+                message: 'Current username does not exist'
+            })
+        })
+}), (request, response, next) => {
+    // verify that a pending friend request currently exists
+    let query = `SELECT MemberID_A, MemberID_B, Verified FROM Contacts WHERE MemberID_A= 
+                (SELECT Memberid FROM Members WHERE Username=$1) AND MemberID_B= 
+                (SELECT Memberid FROM Members WHERE Username=$2)`
+    let values = [request.params.username, request.body.username]
+    
+    pool.query(query, values)
+    .then(result => {
+        //stash the memberid's into the request object to be used in the next function
+        request.memberid_a = result.rows[0].memberid_a
+        request.memberid_b = result.rows[1].memberid_b
+        request.verified = result.rows[2].verified
+        if (result.rows == 0) {
+            response.status(400).send({
+                message: 'No pending friend request found'
+            })
+        }
+        else if (request.verified!=0) {
+            response.status(400).send({
+                message: 'Users have already been verified'
+            })
+        } else {
+            next()
+        }}).catch(err => {
+            console.log("error deleting: " + err)
+            response.status(400).send({
+                message: 'Current username does not exist'
+            })
+        })
+}, (request, response, next) => {
+    // insert new unverified friend 
+    let query = 'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $2, $1, 1)'  //NOTE: This is intentionally backwards since both friends are an A and a B for the other.
+    let values = [request.memberid_a, request.memberid_b]
+
+    pool.query(query, values)
+    .then(result => {
+        next()
+        }).catch(err => {
+            console.log("error adding: " + err)
+            response.status(400).send({
+                message: 'SQL Error: Insert failed'
+            });
+        });
+}, (request, response) => {
+    // update the existing friend
+    let query = 'UPDATE Contacts SET Verified=1 WHERE MemberID_A=$1 AND MemberID_B=$2'
+    let values = [request.memberid_a, request.memberid_b]
+
+    pool.query(query, values)
+    .then(result => {
+        response.status(200).send({
+            message: 'Friend verification successful'
+        }).catch(err => {
+            console.log("SQL Error verifying friend")
+            response.status(400).send({
+                message: 'SQL error updating verification in Contacts table'
+            })
+        })
+    })
+}
+
+
 /**
  * NOTE: THIS QUERY DOES NOT REQUIRE AUTHORIZATION
  * sl
