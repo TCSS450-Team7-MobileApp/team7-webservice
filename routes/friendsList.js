@@ -113,15 +113,37 @@ router.post("/request/:username?", middleware.checkToken, (request, response, ne
     .then(result => {
         next()
         }).catch(err => {
-            console.log("error deleting: " + err)
+            console.log("error finding user: " + err)
             response.status(400).send({
                 message: 'Current username does not exist'
             })
         })
-}), (request, response) => {
+}), (request, response, next) => {
+    // get memeberIDs
+    let query = `SELECT MemberID FROM Members WHERE Username=$1 OR Username=$2`
+    let values = [request.params.username, request.body.username]
+
+    pool.query(query, values)
+    .then(result => {
+        //stash the memberid's into the request object to be used in the next function
+        request.memberid_a = result.rows[0].memberid_a
+        request.memberid_b = result.rows[1].memberid_b
+        if (result.rows < 2) {
+            response.status(400).send({
+                message: 'One or both usernames are invalid'
+            })
+        } else {
+            next()
+        }}).catch(err => {
+            console.log("error getting users: " + err)
+            response.status(400).send({
+                message: 'SQL Error getting users for friend request'
+            })
+        })
+}, (request, response) => {
     // insert new unverified friend 
     let query = 'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0)'
-    let values = [request.params.username, request.body.username]
+    let values = [request.memberid_a, request.memberid_b]
 
     pool.query(query, values)
     .then(result => {
