@@ -169,15 +169,15 @@ router.post(
                 );
 
                 // For Production
-                const link = `https://tcss450-team7.herokuapp.com/verify/${token}`;
+                // const link = `https://tcss450-team7.herokuapp.com/verify/${token}`;
 
                 // For local testing
-                // const link = `http://localhost:5000/verify/${token}`;
+                const link = `http://localhost:5000/verify/${token}`;
 
                 sendEmail(
                     process.env.EMAIL_USERNAME,
                     request.body.email,
-                    'Chatterbug: Welcome to our App!',
+                    'Chatterbug: Account confirmation',
                     emailTemplate(link)
                 );
             })

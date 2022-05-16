@@ -46,8 +46,8 @@ let sendEmail = (from, to, subject, html) => {
 
 const emailTemplate = (link) => `
 <html>
-  <div>
-    <h1>Welcome to Chatterbug!</h1>
+  <div style="text-align: center;">
+    <h1>Welcome to Chatterbug 🐞</h1>
     <p>Hi there!</p>
     <p>Please verify your email address before logging in to our app</p>
     <form action="${link}">
@@ -68,10 +68,13 @@ const emailTemplate = (link) => `
                 text-decoration: none;"
               >Verify Email</button>
     </form>
+    </br>
+    <div>
+        <p>Happy chatting!</p>
+        <p>Chatterbug team</p>
+    </div>
   </div>
 </html>
-
-
 `;
 
 module.exports = {
