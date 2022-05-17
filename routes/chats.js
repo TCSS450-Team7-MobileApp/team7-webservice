@@ -261,6 +261,82 @@ router.get("/:chatId", (request, response, next) => {
 });
 
 /**
+ * @api {get} /chats/:memberId? Request to get the emails of user in a chat
+ * @apiName GetChats
+ * @apiGroup Chats
+ * 
+ * @apiHeader {String} authorization Valid JSON Web Token JWT
+ * 
+ * @apiParam {Number} chatId the chat to look up. 
+ * 
+ * @apiSuccess {Number} rowCount the number of messages returned
+ * @apiSuccess {Object[]} members List of members in the chat
+ * @apiSuccess {String} messages.email The email for the member in the chat
+ * 
+ * @apiError (404: ChatId Not Found) {String} message "Chat ID Not Found"
+ * @apiError (400: Invalid Parameter) {String} message "Malformed parameter. chatId must be a number" 
+ * @apiError (400: Missing Parameters) {String} message "Missing required information"
+ * 
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * 
+ * @apiUse JSONError
+ */ 
+ router.get("/messages/:memberid", (request, response, next) => {
+    //validate on missing or invalid (type) parameters
+    if (!request.params.memberid) {
+        response.status(400).send({
+            message: "Missing required information"
+        })
+    } else if (isNaN(request.params.memberid)) {
+        response.status(400).send({
+            message: "Malformed parameter. MemberId must be a number"
+        })
+    } else {
+        next()
+    }
+},  (request, response, next) => {
+    //validate chat id exists
+    let query = 'SELECT * FROM ChatMembers WHERE MemberId=$1'
+    let values = [request.params.memberid]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount == 0) {
+                response.status(404).send({
+                    message: "Member ID not found"
+                })
+            } else {
+                next()
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error 1",
+                error: error
+            })
+        })
+    }, (request, response) => {
+        //Retrieve the messages, chat members, timestamp, and chatId for the memberId.
+        let query = `SELECT ChatMembers.ChatId AS ChatId, ChatMembers.Memberid AS MemberId, Messages.PrimaryKey AS MessageId, Members.Username, Messages.Message,
+                    to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp
+                    FROM ChatMembers INNER JOIN Messages ON ChatMembers.ChatId=Messages.ChatId INNER JOIN Members ON ChatMembers.MemberId=Messages.MemberId
+                    WHERE Members.MemberId=$1
+                    ORDER BY Timestamp DESC`
+        let values = [request.params.memberid]
+        pool.query(query, values)
+            .then(result => {
+                response.send({
+                    rowCount : result.rowCount,
+                    rows: result.rows
+                })
+            }).catch(err => {
+                response.status(400).send({
+                    message: "SQL Error 2",
+                    error: err
+                })
+            })
+});
+
+/**
  * @api {delete} /chats/:chatId?/:email? Request delete a user from a chat
  * @apiName DeleteChats
  * @apiGroup Chats

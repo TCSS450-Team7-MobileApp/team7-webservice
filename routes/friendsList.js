@@ -254,7 +254,7 @@ router.delete("/delete/:memberid?",  middleware.checkToken, (request, response) 
 
     // middleware.checkToken will verify that MemberID_A is the requester
     
-    let query = `DELETE FROM Contacts WHERE MemberID_A=$1 AND MemberID_B=$2`
+    let query = `DELETE FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$1)`
     let values = [request.params.memberid, request.body.MemberB]
 
     pool.query(query, values)
