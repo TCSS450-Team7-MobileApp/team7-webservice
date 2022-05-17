@@ -322,7 +322,7 @@ router.get("/:chatId", (request, response, next) => {
  * 
  * @apiUse JSONError
  */ 
- router.get("/chats/:memberid", (request, response, next) => {
+ router.get("/add/:memberid", (request, response, next) => {
     //validate on missing or invalid (type) parameters
     if (!request.params.memberid) {
         response.status(400).send({
