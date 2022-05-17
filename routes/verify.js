@@ -65,7 +65,6 @@ router.get(
     }
 );
 
-// TODO: Uncomment and replace /test.html with the path of verification success page
 /**
  * @api {get} /verify Success HTML page displaying verification success message
  * @apiName GetVerifySuccess
@@ -76,8 +75,8 @@ router.get(
  * @apiError (404: Not Found) {String} message "No such file or directory"
  *
  */
-// router.get('/', (req, res) => {
-//     res.status(200).sendFile(path.join(__dirname + '/test.html'));
-// });
+router.get('/', (req, res) => {
+    res.status(200).sendFile(path.join(__dirname + '../../pages/verify.html'));
+});
 
 module.exports = router;

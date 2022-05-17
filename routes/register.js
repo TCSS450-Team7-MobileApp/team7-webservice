@@ -25,15 +25,6 @@ const emailTemplate = require('../utilities').emailTemplate;
 
 const router = express.Router();
 
-// let token = jwt.sign(
-//     {
-//         email: email,
-//     },
-//     // generate token here
-//     'ourSecretKey',
-//     { expiresIn: '10m' }
-// );
-
 /**
  * @api {post} /register Request to register a user
  * @apiName PostRegister
