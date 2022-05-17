@@ -11,6 +11,7 @@ const validation = require('./validationUtils.js');
 const sendEmail = require('./email.js').sendEmail;
 const emailTemplate = require('./email.js').emailTemplate;
 let messaging = require('./pushy_utilities.js');
+const weatherUtils = require('./weatherUtils');
 
 module.exports = {
     pool,
@@ -20,4 +21,5 @@ module.exports = {
     sendEmail,
     emailTemplate,
     messaging,
+    weatherUtils,
 };
