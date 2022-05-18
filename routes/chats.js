@@ -356,8 +356,8 @@ router.get("members/:chatId", (request, response, next) => {
     pool.query(query, values)
         .then(result => {
             if (result.rowCount == 0) {
-                response.status(404).send({
-                    message: "Member ID not found"
+                response.status(200).send({
+                    message: "No chats for existing user."
                 })
             } else {
                 next()
