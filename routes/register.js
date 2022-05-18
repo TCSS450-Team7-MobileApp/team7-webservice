@@ -232,6 +232,7 @@ router.post(
              sendEmail(
                  process.env.EMAIL_USERNAME,
                  request.body.email,
+                 temp_pass,
                  'Chatterbug: Change your password',
                  emailTemplate(link)
              );
