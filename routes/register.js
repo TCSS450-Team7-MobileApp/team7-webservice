@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const config = {
     secret: process.env.JSON_WEB_TOKEN,
 };
+const path = require('path');
 
 //Access the connection to Heroku Database
 const pool = require('../utilities').pool;
@@ -169,7 +170,7 @@ router.post(
                     process.env.EMAIL_USERNAME,
                     request.body.email,
                     'Chatterbug: Account confirmation',
-                    emailTemplate(link)
+                    emailTemplate('verify', link)
                 );
             })
             .catch((error) => {
@@ -191,5 +192,106 @@ router.post(
             });
     }
 );
+
+/**
+ * Forgot Password
+ */
+router.get('/forgotPass', (req, res) => {
+    const email = req.query.email;
+
+    const query =
+        'SELECT MemberID FROM Members WHERE Email=$1 AND Verification = 1';
+    const values = [email];
+
+    pool.query(query, values)
+        .then((result) => {
+            if (result.rowCount != 0) {
+                res.status(200).send({
+                    success: true,
+                    email: email,
+                    message: 'An email has been sent to reset the password',
+                });
+                // Make JWT token
+                const token = jwt.sign(
+                    {
+                        memberid: result.rows[0].memberid,
+                        email: email,
+                    },
+                    config.secret,
+                    {
+                        expiresIn: '1h',
+                    }
+                );
+
+                // For Production
+                const link = `https://tcss450-team7.herokuapp.com/register/resetPass/${token}`;
+
+                // For local testing
+                // const link = `http://localhost:5000/register/resetPass/${token}`;
+
+                sendEmail(
+                    process.env.EMAIL_USERNAME,
+                    email,
+                    'Chatterbug: Change your password',
+                    emailTemplate('reset', link)
+                );
+            } else {
+                res.status(400).send({
+                    message: 'User does not exist or have not verified',
+                });
+            }
+        })
+        .catch((err) => {
+            res.status(400).send({ message: err.detail });
+        });
+});
+
+/**
+ * Forgot Password
+ */
+router.get('/resetPass/:token', (req, res) => {
+    // Decode from jwt token to grab the memberid
+    const decoded = jwt.verify(req.params.token, config.secret);
+    req.decoded = decoded;
+
+    const query =
+        'SELECT MemberID FROM Members WHERE MemberID = $1 AND Verification = 1';
+    const values = [decoded.memberid];
+    pool.query(query, values)
+        .then((result) => {
+            if (result.rowCount != 0) {
+                // redirect to password reset html form
+                res.redirect('/register/resetPassword');
+            } else {
+                res.status(400).send({
+                    message: 'User does not exist or have not verified',
+                });
+            }
+        })
+        .catch((err) => {
+            res.status(400).send({ message: err.detail });
+        });
+});
+
+router.get('/resetPassword', (req, res) => {
+    res.status(200).sendFile(
+        path.join(__dirname, '../pages/resetPassword.html')
+    );
+});
+
+function getTempPass() {
+    var pass = '';
+    var str =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
+        'abcdefghijklmnopqrstuvwxyz0123456789@#$';
+
+    for (let i = 1; i <= 8; i++) {
+        var char = Math.floor(Math.random() * str.length + 1);
+
+        pass += str.charAt(char);
+    }
+
+    return pass;
+}
 
 module.exports = router;
