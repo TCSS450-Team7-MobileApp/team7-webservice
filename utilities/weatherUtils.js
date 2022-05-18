@@ -25,6 +25,15 @@ const processCurrentWeather = (req, res, next) => {
     } else {
         // grabs data
         const temp = Math.round(req.body.data.current.temp);
+
+        const descriptionInput = req.body.data.current.weather[0].description;
+        const description = descriptionInput.replace(
+            /(^\w{1})|(\s+\w{1})/g,
+            (letter) => letter.toUpperCase()
+        );
+
+        const minTemp = Math.round(req.body.data.daily[0].temp.min);
+        const maxTemp = Math.round(req.body.data.daily[0].temp.max);
         const humidity = Math.round(req.body.data.current.humidity);
         const feels_like = Math.round(req.body.data.current.feels_like);
         const prob_precipitation = req.body.data.hourly[0].pop;
@@ -32,6 +41,9 @@ const processCurrentWeather = (req, res, next) => {
 
         req.body.processedCurrentData = {
             temp: temp,
+            description: description,
+            minTemp: minTemp,
+            maxTemp: maxTemp,
             humidity: humidity,
             feels_like: feels_like,
             prob_precipitation: prob_precipitation,
