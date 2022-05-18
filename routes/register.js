@@ -196,102 +196,196 @@ router.post(
 /**
  * Forgot Password
  */
-router.get('/forgotPass', (req, res) => {
-    const email = req.query.email;
+ router.put('/forgotPass/:token', 
+ (request, response, next) => {
+ 
+     // Decode from jwt token to grab the memberid
+     const decoded = jwt.verify(req.params.token, config.secret);
+     req.decoded = decoded;
 
-    const query =
-        'SELECT MemberID FROM Members WHERE Email=$1 AND Verification = 1';
-    const values = [email];
+     const query =
+         'SELECT MemberID FROM Members WHERE MemberID = $1 AND Verification = 1';
+     const values = [decoded.memberid];
+     pool.query(query, values)
+         .then((result) => {
+             if (result.rowCount != 0) {
+                 next();
+             }
+             else {
+                 res.status(400).send({
+                     message: 'No verified user.',
+                 });
+             }
+         })
+         .catch((err) => {
+             res.status(400).send({ message: err.detail });
+         });
+ },
+ (request, response) => {
+     
+     const temp_pass = getTempPass();
 
-    pool.query(query, values)
-        .then((result) => {
-            if (result.rowCount != 0) {
-                res.status(200).send({
-                    success: true,
-                    email: email,
-                    message: 'An email has been sent to reset the password',
-                });
-                // Make JWT token
-                const token = jwt.sign(
-                    {
-                        memberid: result.rows[0].memberid,
-                        email: email,
-                    },
-                    config.secret,
-                    {
-                        expiresIn: '1h',
-                    }
-                );
+     let salt = generateSalt(32);
+     let salted_hash = generateHash(temp_pass, salt);
 
-                // For Production
-                const link = `https://tcss450-team7.herokuapp.com/register/resetPass/${token}`;
+     let theQuery =
+         `UPDATE Credentials let SaltedHash=$2, Salt=$3 WHERE MemberId=$1`
+     let values = [decoded.memberid, salted_hash, salt];
 
-                // For local testing
-                // const link = `http://localhost:5000/register/resetPass/${token}`;
+     pool.query(theQuery, values)
+         .then((result) => {
+             //We successfully updated the password!
+             response.status(201).send({
+                 success: true,
+                 email: request.body.email,
+             }); // TESTING VERIFICATION:
 
-                sendEmail(
-                    process.env.EMAIL_USERNAME,
-                    email,
-                    'Chatterbug: Change your password',
-                    emailTemplate('reset', link)
-                );
-            } else {
-                res.status(400).send({
-                    message: 'User does not exist or have not verified',
-                });
-            }
-        })
-        .catch((err) => {
-            res.status(400).send({ message: err.detail });
-        });
+             // Make JWT token
+             const token = jwt.sign(
+                 {
+                     memberid: request.memberid,
+                     email: request.body.email,
+                 },
+                 config.secret,
+                 {
+                     expiresIn: '1d',
+                 }
+             );
+
+             // For Production
+             const link = `https://tcss450-team7.herokuapp.com/resetpass/${token}`;
+
+             sendEmail(
+                 process.env.EMAIL_USERNAME,
+                 request.body.email,
+                 temp_pass,
+                 'Chatterbug: Here is your temporary password, please follow the link below to set a new one!',
+                 emailTemplate(link)
+             );
+         })
+         .catch((error) => {
+             //log the error for debugging
+             // console.log("PWD insert")
+             // console.log(error)
+
+             /***********************************************************************
+              * If we get an error inserting the PWD, we should go back and remove
+              * the user from the member table. We don't want a member in that table
+              * without a PWD! That implementation is up to you if you want to add
+              * that step.
+              **********************************************************************/
+
+             response.status(400).send({
+                 message: 'other error, see detail',
+                 detail: error.detail,
+             });
+         });
 });
 
 /**
  * Forgot Password
  */
-router.get('/resetPass/:token', (req, res) => {
-    // Decode from jwt token to grab the memberid
-    const decoded = jwt.verify(req.params.token, config.secret);
-    req.decoded = decoded;
+ router.put('/resetPass/:token', 
+ (request, response, next) => {
+ 
+     // Decode from jwt token to grab the memberid
+     const decoded = jwt.verify(req.params.token, config.secret);
+     req.decoded = decoded;
 
-    const query =
-        'SELECT MemberID FROM Members WHERE MemberID = $1 AND Verification = 1';
-    const values = [decoded.memberid];
-    pool.query(query, values)
-        .then((result) => {
-            if (result.rowCount != 0) {
-                // redirect to password reset html form
-                res.redirect('/register/resetPassword');
-            } else {
-                res.status(400).send({
-                    message: 'User does not exist or have not verified',
-                });
-            }
-        })
-        .catch((err) => {
-            res.status(400).send({ message: err.detail });
-        });
-});
+     const query =
+         'SELECT MemberID FROM Members WHERE MemberID = $1 AND Verification = 1';
+     const values = [decoded.memberid];
+     pool.query(query, values)
+         .then((result) => {
+             if (result.rowCount != 0) {
+                 next();
+             }
+             else {
+                 res.status(400).send({
+                     message: 'No verified user.',
+                 });
+             }
+         })
+         .catch((err) => {
+             res.status(400).send({ message: err.detail });
+         });
+ },
+ (request, response) => {
+     
+     const new_pass=request.body.new_pass;
 
-router.get('/resetPassword', (req, res) => {
-    res.status(200).sendFile(
-        path.join(__dirname, '../pages/resetPassword.html')
-    );
+     let salt = generateSalt(32);
+     let salted_hash = generateHash(new_pass, salt);
+
+     let theQuery =
+         `UPDATE Credentials let SaltedHash=$2, Salt=$3 WHERE MemberId=$1`
+     let values = [decoded.memberid, salted_hash, salt];
+
+     pool.query(theQuery, values)
+         .then((result) => {
+             //We successfully updated the password!
+             response.status(201).send({
+                 success: true,
+                 email: request.body.email,
+             }); // TESTING VERIFICATION:
+
+             // Make JWT token
+             const token = jwt.sign(
+                 {
+                     memberid: request.memberid,
+                     email: request.body.email,
+                 },
+                 config.secret,
+                 {
+                     expiresIn: '1d',
+                 }
+             );
+
+             // For Production
+             const link = `https://tcss450-team7.herokuapp.com/passwordChanged/${token}`;
+
+             // For local testing
+             // const link = `http://localhost:5000/verify/${token}`;
+
+             sendEmail(
+                 process.env.EMAIL_USERNAME,
+                 request.body.email,
+                 'Chatterbug: Password successfully updated',
+                 emailTemplate(link)
+             );
+         })
+         .catch((error) => {
+             //log the error for debugging
+             // console.log("PWD insert")
+             // console.log(error)
+
+             /***********************************************************************
+              * If we get an error inserting the PWD, we should go back and remove
+              * the user from the member table. We don't want a member in that table
+              * without a PWD! That implementation is up to you if you want to add
+              * that step.
+              **********************************************************************/
+
+             response.status(400).send({
+                 message: 'other error, see detail',
+                 detail: error.detail,
+             });
+         });
 });
 
 function getTempPass() {
-    var pass = '';
-    var str =
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
-        'abcdefghijklmnopqrstuvwxyz0123456789@#$';
-
-    for (let i = 1; i <= 8; i++) {
-        var char = Math.floor(Math.random() * str.length + 1);
-
-        pass += str.charAt(char);
-    }
-
-    return pass;
+ var pass = '';
+         var str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 
+                 'abcdefghijklmnopqrstuvwxyz0123456789@#$';
+           
+         for (let i = 1; i <= 8; i++) {
+             var char = Math.floor(Math.random()
+                         * str.length + 1);
+               
+             pass += str.charAt(char)
+         }
+           
+         return pass;
 }
 
 module.exports = router;

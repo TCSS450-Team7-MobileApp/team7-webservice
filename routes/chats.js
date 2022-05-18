@@ -165,11 +165,25 @@ console.log(request.decoded)
                 })
             })
 
-}, (request, response) => {
+}, (request, response, next) => {
     //Insert the memberId into the chat
     let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
                   VALUES ($1, $2)
                   RETURNING *`
+    let values = [request.params.chatId, request.decoded.memberid]
+    pool.query(insert, values)
+        .then(result => {
+            next()
+        }).catch(err => {
+            response.status(400).send({
+                message: "SQL Error 1",
+                error: err
+            })
+        })
+}, (request, response) => {
+    // Populate a blank message
+    let insert = `INSERT INTO Messages(PrimaryKey, ChatId, Message, MemberId)
+                  VALUES (DEFAULT, $1, '', $2)`
     let values = [request.params.chatId, request.decoded.memberid]
     pool.query(insert, values)
         .then(result => {
@@ -178,12 +192,11 @@ console.log(request.decoded)
             })
         }).catch(err => {
             response.status(400).send({
-                message: "SQL Error",
+                message: "SQL Error 2",
                 error: err
             })
         })
-    }
-)
+});
 
 /**
  * @api {get} /chats/:chatId? Request to get the emails of user in a chat
@@ -357,10 +370,10 @@ router.get("members/:chatId", (request, response, next) => {
         })
     }, (request, response) => {
         //Retrieve the messages, chat members, timestamp, and chatId for the memberId.
-        let query = `SELECT DISTINCT ON (ChatMembers.ChatId) ChatMembers.ChatId, Username, Message,
+        let query = `SELECT DISTINCT ON (Username) ChatMembers.ChatId, Username, Message,
                         to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp 
                         FROM ChatMembers JOIN Members ON ChatMembers.MemberId=Members.MemberId JOIN Messages ON ChatMembers.MemberId=Messages.MemberId 
-                        WHERE ChatMembers.ChatID IN (SELECT DISTINCT ChatId FROM ChatMembers WHERE ChatMembers.MemberId=$1) AND Members.MemberId!=$1`
+                        WHERE ChatMembers.ChatID IN (SELECT DISTINCT ChatId FROM ChatMembers WHERE ChatMembers.MemberId=$1) AND ChatMembers.MemberId!=$1`
                     
                    //let query = `SELECT ChatMembers.ChatId, Members.Username FROM ChatMembers INNER JOIN Members on ChatMembers.MemberId=Members.MemberID WHERE Members.MemberID=$1 GROUP BY ChatId`
         let values = [request.params.memberid]
