@@ -44,38 +44,71 @@ let sendEmail = (from, to, subject, html) => {
     });
 };
 
-const emailTemplate = (link) => `
-<html>
-  <div style="text-align: center;">
-    <h1>Welcome to Chatterbug 🐞</h1>
-    <p>Hi there!</p>
-    <p>Please verify your email address before logging in to our app</p>
-    <form action="${link}">
-      <button class="btn" type="submit" 
-              style="
-                background-color: #e1ecf4;
-                border-radius: 20px;
-                border: 1px solid #7aa7c7;
-                box-sizing: border-box;
-                color: #39739d;
-                cursor: pointer;
-                font-size: 12px;
-                font-weight: 400;
-                margin: 0;
-                padding: 6px .6em;
-                position: relative;
-                text-align: center;
-                text-decoration: none;"
-              >Verify Email</button>
-    </form>
-    </br>
-    <div>
-        <p>Happy chatting!</p>
-        <p>Chatterbug team</p>
-    </div>
-  </div>
-</html>
-`;
+const emailTemplate = (verifyOrReset, link) => {
+    if (verifyOrReset === 'verify') {
+        return `<html>
+          <div style="text-align: center;">
+            <h1>Welcome to Chatterbug 🐞</h1>
+            <p>Hi there!</p>
+            <p>Please verify your email address before logging in to our app</p>
+            <form action="${link}">
+              <button class="btn" type="submit" 
+                      style="
+                        background-color: #e1ecf4;
+                        border-radius: 20px;
+                        border: 1px solid #7aa7c7;
+                        box-sizing: border-box;
+                        color: #39739d;
+                        cursor: pointer;
+                        font-size: 12px;
+                        font-weight: 400;
+                        margin: 0;
+                        padding: 6px .6em;
+                        position: relative;
+                        text-align: center;
+                        text-decoration: none;"
+                      >Verify Email</button>
+            </form>
+            </br>
+            <div>
+                <p>Happy chatting!</p>
+                <p>Chatterbug team</p>
+            </div>
+          </div>
+        </html>`;
+    } else {
+        return `<html>
+          <div style="text-align: center;">
+            <h1>Forgot your password? No worries 🐞</h1>
+            <p>Hi there!</p>
+            <p>Please click on the link below to reset your password</p>
+            <form action="${link}">
+              <button class="btn" type="submit" 
+                      style="
+                        background-color: #e1ecf4;
+                        border-radius: 20px;
+                        border: 1px solid #7aa7c7;
+                        box-sizing: border-box;
+                        color: #39739d;
+                        cursor: pointer;
+                        font-size: 12px;
+                        font-weight: 400;
+                        margin: 0;
+                        padding: 6px .6em;
+                        position: relative;
+                        text-align: center;
+                        text-decoration: none;"
+                      >Reset Password</button>
+            </form>
+            </br>
+            <div>
+                <p>Happy chatting!</p>
+                <p>Chatterbug team</p>
+            </div>
+          </div>
+        </html>`;
+    }
+};
 
 module.exports = {
     sendEmail,
