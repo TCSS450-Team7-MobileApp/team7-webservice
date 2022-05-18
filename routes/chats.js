@@ -373,7 +373,7 @@ router.get("members/:chatId", (request, response, next) => {
         let query = `SELECT DISTINCT ON (Username) ChatMembers.ChatId, Username, Message,
                         to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp 
                         FROM ChatMembers JOIN Members ON ChatMembers.MemberId=Members.MemberId JOIN Messages ON ChatMembers.MemberId=Messages.MemberId 
-                        WHERE ChatMembers.ChatID IN (SELECT DISTINCT ChatId FROM ChatMembers WHERE ChatMembers.MemberId=$1) AND ChatMembers.MemberId!=71`
+                        WHERE ChatMembers.ChatID IN (SELECT DISTINCT ChatId FROM ChatMembers WHERE ChatMembers.MemberId=$1) AND ChatMembers.MemberId!=$1`
                     
                    //let query = `SELECT ChatMembers.ChatId, Members.Username FROM ChatMembers INNER JOIN Members on ChatMembers.MemberId=Members.MemberID WHERE Members.MemberID=$1 GROUP BY ChatId`
         let values = [request.params.memberid]
