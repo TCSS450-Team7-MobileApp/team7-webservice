@@ -206,7 +206,7 @@ console.log(request.decoded)
  * 
  * @apiUse JSONError
  */ 
-router.get("/:chatId", (request, response, next) => {
+router.get("members/:chatId", (request, response, next) => {
     //validate on missing or invalid (type) parameters
     if (!request.params.chatId) {
         response.status(400).send({
@@ -322,7 +322,7 @@ router.get("/:chatId", (request, response, next) => {
  * 
  * @apiUse JSONError
  */ 
- router.get("/chats/:memberid", (request, response, next) => {
+ router.get("/:memberid", (request, response, next) => {
     //validate on missing or invalid (type) parameters
     if (!request.params.memberid) {
         response.status(400).send({
