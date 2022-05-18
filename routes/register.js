@@ -226,9 +226,6 @@ router.post(
              // For Production
              const link = `https://tcss450-team7.herokuapp.com/resetpass/${token}`;
 
-             // For local testing
-             // const link = `http://localhost:5000/verify/${token}`;
-
              sendEmail(
                  process.env.EMAIL_USERNAME,
                  request.body.email,
