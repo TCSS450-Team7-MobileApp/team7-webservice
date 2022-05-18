@@ -206,7 +206,7 @@ console.log(request.decoded)
  * 
  * @apiUse JSONError
  */ 
-router.get("/:chatId", (request, response, next) => {
+router.get("members/:chatId", (request, response, next) => {
     //validate on missing or invalid (type) parameters
     if (!request.params.chatId) {
         response.status(400).send({
@@ -261,6 +261,47 @@ router.get("/:chatId", (request, response, next) => {
 });
 
 /**
+ * Get all chatIds for a member
+ */
+ router.get("/getChats/:memberId", (request, response, next) => {
+    //validate on missing or invalid (type) parameters
+    if (!request.params.memberId) {
+        response.status(400).send({
+            message: "Missing required information"
+        })
+    } else if (isNaN(request.params.memberId)) {
+        response.status(400).send({
+            message: "Malformed parameter. memberId must be a number"
+        })
+    } else {
+        next()
+    }
+},  (request, response) => {
+    //validate chat id exists
+    let query = 'SELECT * FROM ChatMembers WHERE memberId=$1'
+    let values = [request.params.memberId]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount == 0) {
+                response.status(404).send({
+                    message: "memberId not found"
+                })
+            } else {
+                response.send({
+                    rowCount : result.rowCount,
+                    rows: result.rows
+                })
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: error
+            })
+        })
+});
+
+/**
  * @api {get} /chats/:memberId? Request to get the emails of user in a chat
  * @apiName GetChats
  * @apiGroup Chats
@@ -281,7 +322,7 @@ router.get("/:chatId", (request, response, next) => {
  * 
  * @apiUse JSONError
  */ 
- router.get("/messages/:memberid", (request, response, next) => {
+ router.get("/:memberid", (request, response, next) => {
     //validate on missing or invalid (type) parameters
     if (!request.params.memberid) {
         response.status(400).send({
@@ -316,11 +357,12 @@ router.get("/:chatId", (request, response, next) => {
         })
     }, (request, response) => {
         //Retrieve the messages, chat members, timestamp, and chatId for the memberId.
-        let query = `SELECT ChatMembers.ChatId AS ChatId, ChatMembers.Memberid AS MemberId, Messages.PrimaryKey AS MessageId, Members.Username, Messages.Message,
-                    to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp
-                    FROM ChatMembers INNER JOIN Messages ON ChatMembers.ChatId=Messages.ChatId INNER JOIN Members ON ChatMembers.MemberId=Messages.MemberId
-                    WHERE Members.MemberId=$1
-                    ORDER BY Timestamp DESC`
+        let query = `SELECT DISTINCT ON (ChatMembers.ChatId) ChatMembers.ChatId, Username, Message,
+                        to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp 
+                        FROM ChatMembers JOIN Members ON ChatMembers.MemberId=Members.MemberId JOIN Messages ON ChatMembers.MemberId=Messages.MemberId 
+                        WHERE ChatMembers.ChatID IN (SELECT DISTINCT ChatId FROM ChatMembers WHERE ChatMembers.MemberId=$1) AND Members.MemberId!=$1`
+                    
+                   //let query = `SELECT ChatMembers.ChatId, Members.Username FROM ChatMembers INNER JOIN Members on ChatMembers.MemberId=Members.MemberID WHERE Members.MemberID=$1 GROUP BY ChatId`
         let values = [request.params.memberid]
         pool.query(query, values)
             .then(result => {
