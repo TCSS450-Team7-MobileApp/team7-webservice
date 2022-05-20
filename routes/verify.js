@@ -4,8 +4,8 @@ const pool = require('../utilities').pool;
 
 const router = express.Router();
 
-let jwt = require('jsonwebtoken');
-let config = {
+const jwt = require('jsonwebtoken');
+const config = {
     secret: process.env.JSON_WEB_TOKEN,
 };
 
@@ -29,25 +29,36 @@ router.get(
     '/:token',
     (req, res, next) => {
         // Decode from jwt token to grab the memberid
-        const decoded = jwt.verify(req.params.token, config.secret);
-        req.decoded = decoded;
-
-        const query =
-            'SELECT MemberID FROM Members WHERE MemberID = $1 AND Verification = 0';
-        const values = [decoded.memberid];
-
-        pool.query(query, values)
-            .then((result) => {
-                if (result.rowCount != 0) next();
-                else {
-                    res.status(400).send({
-                        message: 'This email has already been verified',
+        try {
+            jwt.verify(req.params.token, config.secret, (err, decoded) => {
+                if (err) {
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Token is not valid',
+                        error: err.detail,
                     });
-                }
-            })
-            .catch((err) => {
-                res.status(400).send({ message: err.detail });
+                } else req.decoded = decoded;
             });
+
+            const query =
+                'SELECT MemberID FROM Members WHERE MemberID = $1 AND Verification = 0';
+            const values = [req.decoded.memberid];
+
+            pool.query(query, values)
+                .then((result) => {
+                    if (result.rowCount != 0) next();
+                    else {
+                        res.status(400).send({
+                            message: 'This email has already been verified',
+                        });
+                    }
+                })
+                .catch((err) => {
+                    res.status(400).send({ message: err.detail });
+                });
+        } catch (err) {
+            res.status(400).send({ message: err.detail });
+        }
     },
     (req, res) => {
         const updateVerify =
