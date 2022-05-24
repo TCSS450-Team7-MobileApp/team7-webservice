@@ -165,11 +165,25 @@ console.log(request.decoded)
                 })
             })
 
-}, (request, response) => {
+}, (request, response, next) => {
     //Insert the memberId into the chat
     let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
                   VALUES ($1, $2)
                   RETURNING *`
+    let values = [request.params.chatId, request.decoded.memberid]
+    pool.query(insert, values)
+        .then(result => {
+            next()
+        }).catch(err => {
+            response.status(400).send({
+                message: "SQL Error 1",
+                error: err
+            })
+        })
+}, (request, response) => {
+    // Populate a blank message
+    let insert = `INSERT INTO Messages(PrimaryKey, ChatId, Message, MemberId)
+                  VALUES (DEFAULT, $1, '', $2)`
     let values = [request.params.chatId, request.decoded.memberid]
     pool.query(insert, values)
         .then(result => {
@@ -178,12 +192,11 @@ console.log(request.decoded)
             })
         }).catch(err => {
             response.status(400).send({
-                message: "SQL Error",
+                message: "SQL Error 2",
                 error: err
             })
         })
-    }
-)
+});
 
 /**
  * @api {get} /chats/:chatId? Request to get the emails of user in a chat
@@ -206,7 +219,7 @@ console.log(request.decoded)
  * 
  * @apiUse JSONError
  */ 
-router.get("/:chatId", (request, response, next) => {
+router.get("members/:chatId", (request, response, next) => {
     //validate on missing or invalid (type) parameters
     if (!request.params.chatId) {
         response.status(400).send({
@@ -255,6 +268,124 @@ router.get("/:chatId", (request, response, next) => {
             }).catch(err => {
                 response.status(400).send({
                     message: "SQL Error",
+                    error: err
+                })
+            })
+});
+
+/**
+ * Get all chatIds for a member
+ */
+ router.get("/getChats/:memberId", (request, response, next) => {
+    //validate on missing or invalid (type) parameters
+    if (!request.params.memberId) {
+        response.status(400).send({
+            message: "Missing required information"
+        })
+    } else if (isNaN(request.params.memberId)) {
+        response.status(400).send({
+            message: "Malformed parameter. memberId must be a number"
+        })
+    } else {
+        next()
+    }
+},  (request, response) => {
+    //validate chat id exists
+    let query = 'SELECT * FROM ChatMembers WHERE memberId=$1'
+    let values = [request.params.memberId]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount == 0) {
+                response.status(404).send({
+                    message: "memberId not found"
+                })
+            } else {
+                response.send({
+                    rowCount : result.rowCount,
+                    rows: result.rows
+                })
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error",
+                error: error
+            })
+        })
+});
+
+/**
+ * @api {get} /chats/:memberId? Request to get the emails of user in a chat
+ * @apiName GetChats
+ * @apiGroup Chats
+ * 
+ * @apiHeader {String} authorization Valid JSON Web Token JWT
+ * 
+ * @apiParam {Number} chatId the chat to look up. 
+ * 
+ * @apiSuccess {Number} rowCount the number of messages returned
+ * @apiSuccess {Object[]} members List of members in the chat
+ * @apiSuccess {String} messages.email The email for the member in the chat
+ * 
+ * @apiError (404: ChatId Not Found) {String} message "Chat ID Not Found"
+ * @apiError (400: Invalid Parameter) {String} message "Malformed parameter. chatId must be a number" 
+ * @apiError (400: Missing Parameters) {String} message "Missing required information"
+ * 
+ * @apiError (400: SQL Error) {String} message the reported SQL error details
+ * 
+ * @apiUse JSONError
+ */ 
+ router.get("/:memberid", (request, response, next) => {
+    //validate on missing or invalid (type) parameters
+    if (!request.params.memberid) {
+        response.status(400).send({
+            message: "Missing required information"
+        })
+    } else if (isNaN(request.params.memberid)) {
+        response.status(400).send({
+            message: "Malformed parameter. MemberId must be a number"
+        })
+    } else {
+        next()
+    }
+},  (request, response, next) => {
+    //validate chat id exists
+    let query = 'SELECT * FROM ChatMembers WHERE MemberId=$1'
+    let values = [request.params.memberid]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount == 0) {
+                response.status(200).send({
+                    message: "No chats for existing user."
+                })
+            } else {
+                next()
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error 1",
+                error: error
+            })
+        })
+    }, (request, response) => {
+        //Retrieve the messages, chat members, timestamp, and chatId for the memberId.
+        let query = `SELECT DISTINCT ON (Username) ChatMembers.ChatId, Username, Message,
+                        to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp 
+                        FROM ChatMembers JOIN Members ON ChatMembers.MemberId=Members.MemberId JOIN Messages ON ChatMembers.MemberId=Messages.MemberId 
+                        WHERE ChatMembers.ChatID IN (SELECT DISTINCT ChatId FROM ChatMembers WHERE ChatMembers.MemberId=$1) AND ChatMembers.MemberId!=$1`
+                    
+                   //let query = `SELECT ChatMembers.ChatId, Members.Username FROM ChatMembers INNER JOIN Members on ChatMembers.MemberId=Members.MemberID WHERE Members.MemberID=$1 GROUP BY ChatId`
+        let values = [request.params.memberid]
+        pool.query(query, values)
+            .then(result => {
+                response.send({
+                    rowCount : result.rowCount,
+                    rows: result.rows
+                })
+            }).catch(err => {
+                response.status(400).send({
+                    message: "SQL Error 2",
                     error: err
                 })
             })
