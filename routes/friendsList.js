@@ -132,8 +132,22 @@ router.post(
                     message: 'SQL error',
                 });
             });
-    },
-    (request, response) => {
+    }, (request, response, next) => {
+        // verify that friend does not already exist!
+        let query = `SELECT* FROM Contacts WHERE MemberID_A=$1 AND MemberID_B=$2`
+        let values = [request.params.memberid, request.body.memberid];
+
+        pool.query(query, values)
+            .then((result) => {
+                if (result.rowCount==0) {
+                    response.status(200).send({
+                        message: 'pending friend request already exists.'
+                    })
+                } else {
+                    next()
+                }
+            })
+    },(request, response) => {
         // insert new unverified friend
         let query =
             'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0), (DEFAULT, $2, $1, 0)';
