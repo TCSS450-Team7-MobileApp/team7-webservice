@@ -66,7 +66,7 @@ router.get(
     },
     (request, response) => {
         // perform the Select*
-        let query = `SELECT Members.FirstName AS FirstName, Members.LastName AS LastName, Members.Username AS Username, Members.Email AS Email
+        let query = `SELECT Members.MemberId as id, Members.FirstName AS FirstName, Members.LastName AS LastName, Members.Username AS Username, Members.Email AS Email
                         FROM Contacts LEFT JOIN Members ON Members.MemberID = Contacts.MemberID_B 
                         WHERE MemberID_A=$1
                         ORDER BY LastName ASC`;
