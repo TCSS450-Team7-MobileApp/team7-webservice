@@ -348,9 +348,9 @@ router.get("members/:chatId", (request, response, next) => {
     } else {
         next()
     }
-},  (request, response, next) => {
-    //validate chat id exists
-    let query = 'SELECT * FROM ChatMembers WHERE MemberId=$1'
+}, (request, response, next) => {
+    //verify the chatids
+    let query = 'SELECT Distinct ChatId FROM ChatMembers WHERE MemberId=$1'
     let values = [request.params.memberid]
 
     pool.query(query, values)
@@ -360,35 +360,92 @@ router.get("members/:chatId", (request, response, next) => {
                     message: "No chats for existing user."
                 })
             } else {
+                //next
                 next()
             }
         }).catch(error => {
             response.status(400).send({
-                message: "SQL Error 1",
+                message: "SQL Error on chatId",
                 error: error
             })
         })
-    }, (request, response) => {
-        //Retrieve the messages, chat members, timestamp, and chatId for the memberId.
-        let query = `SELECT DISTINCT ON (Username) ChatMembers.ChatId, Username, Message,
-                        to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp 
-                        FROM ChatMembers JOIN Members ON ChatMembers.MemberId=Members.MemberId JOIN Messages ON ChatMembers.MemberId=Messages.MemberId 
-                        WHERE ChatMembers.ChatID IN (SELECT DISTINCT ChatId FROM ChatMembers WHERE ChatMembers.MemberId=$1) AND ChatMembers.MemberId!=$1`
-                    
-                   //let query = `SELECT ChatMembers.ChatId, Members.Username FROM ChatMembers INNER JOIN Members on ChatMembers.MemberId=Members.MemberID WHERE Members.MemberID=$1 GROUP BY ChatId`
-        let values = [request.params.memberid]
+}, (request, response, next) => {
+    //get the usernames
+    let query = `SELECT DISTINCT members.username 
+                FROM chatmembers JOIN members on chatmembers.memberid = members.memberid 
+                WHERE chatid IN (select chatid from chatmembers where memberid=$1) AND ChatMembers.Memberid!=$1`
+    let values = [request.params.memberid]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount == 0) {
+                response.status(200).send({
+                    message: "No chats for existing user."
+                })
+            } else {
+                //stash the chatId
+                response.usernames = result.rows;
+                next()
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error on users",
+                error: error
+            })
+        })
+}, (request, response, next) => {
+    //get the most recent message
+    let query = `SELECT DISTINCT ChatId, Max(Message), Max(to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' )) AS Timestamp 
+                FROM Messages WHERE chatid IN (Select ChatID From ChatMembers WHERE MemberId=$1) GROUP BY ChatId`
+    let values = [request.params.memberid]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount == 0) {
+                response.status(200).send({
+                    message: "No messages for existing user."
+                })
+            } else {
+                response.chatid = result.rows.ChatId
+                response.message = result.rows.Message
+                response.timestamp = result.rows.Timestamp
+                next()
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "SQL Error on messages",
+                error: error
+            })
+        })
+}, (request, response) => {
+            // send a notification of this message to ALL members with registered tokens
+        let query = `SELECT token FROM Push_Token
+                    INNER JOIN ChatMembers ON
+                    Push_Token.memberid=ChatMembers.memberid
+                    WHERE ChatMembers.chatId=$1`
+        let values = [request.body.chatId]
+
         pool.query(query, values)
             .then(result => {
+                console.log(request.decoded.email)
+                console.log(request.body.message)
+                result.rows.forEach(entry => 
+                    msg_functions.sendMessageToIndividual(
+                        entry.token, 
+                        response.usernames,
+                        response.chatid = result.rows.ChatId,
+                        response.message = result.rows.Message,
+                        response.timestamp = result.rows.Timestamp
+                    ))
                 response.send({
-                    rowCount : result.rowCount,
-                    rows: result.rows
-                })
-            }).catch(err => {
-                response.status(400).send({
-                    message: "SQL Error 2",
-                    error: err
-                })
+                success:true
             })
+        }).catch(err => {
+            response.status(400).send({
+            message: "SQL Error on select from push token in getting chats",
+            error: err
+        })
+    })
 });
 
 /**
