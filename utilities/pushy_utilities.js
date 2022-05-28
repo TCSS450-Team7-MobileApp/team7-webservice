@@ -53,8 +53,33 @@ function updateChatRoom(token, username, chat, message, timestamp) {
     })
 }
 
+//use to display friend requests in real time
+function friendRequest(token, email) {
+
+    //build the message for Pushy to send
+    var data = {
+        "type": "friend_request",
+        "email": email,
+    }
+
+
+    // Send push notification via the Send Notifications API 
+    // https://pushy.me/docs/api/send-notifications 
+    pushyAPI.sendPushNotification(data, token, {}, function (err, id) {
+        // Log errors to console 
+        if (err) {
+            return console.log('Fatal Error', err);
+        }
+
+        // Log success 
+        console.log('Friend request sent successfully! (ID: ' + id + ')')
+    })
+}
+
 //add other "sendTypeToIndividual" functions here. Don't forget to export them
 
 module.exports = {
-    sendMessageToIndividual
+    sendMessageToIndividual,
+    updateChatRoom,
+    friendRequest
 }
