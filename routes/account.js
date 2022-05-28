@@ -25,8 +25,39 @@ const router = express.Router()
  * @apiError (404: Missing Parameters) {String} message "Failed to delete: Resource does not exist"
  */ 
 router.put('/delete/:email?', (request, response, next) => {
+    // verify email exists
+    let query = `SELECT * FROM Members WHERE Email=$1`;
+    let values = [request.params.email];
 
-    let query1= `DELETE FROM Credentials WHERE Credentials.memberid = (SELECT memberid FROM Members WHERE Members.email = $1)`;
+    pool.query(query, values)
+    .then(result => {
+        if (result.rowCount == 0) {
+            response.status(200).send({
+                message: 'Email not found, delete aborted.'
+            })
+        } else {
+            next()
+        }
+    })
+}, (request, response, next) => {
+    // remove existing contacts
+    let query = `DELETE FROM Contacts WHERE memberid_a=$1 OR memberid_b=$1`;
+    let values = [request.params.email];
+
+    pool.query(query, values)
+    .then(result => {
+        next()
+    })
+    .catch(err => {
+        console.log("Error deleting from contacts")
+        response.status(404).send({
+            msesage: 'SQL Error while deleting from contacts'
+        })
+    })
+
+}, (request, response, next) => {
+    // delete from credentials
+    let query= `DELETE FROM Credentials WHERE Credentials.memberid = (SELECT memberid FROM Members WHERE Members.email = $1)`;
     let values = [request.params.email];
 
     pool.query(query, values)
@@ -36,12 +67,12 @@ router.put('/delete/:email?', (request, response, next) => {
     .catch(err => {
         console.log("error deleting credentials: " + err)
         response.status(404).send({
-            message: 'Failed to delete: Resource does not exist'
+            message: 'SQL error while deleting from credentials'
         });
     });
 
 }, (request, response) => {
-
+    // delete from members
     let query = `DELETE FROM Members WHERE Members.memberid = (SELECT memberid FROM Members WHERE Members.email = $1)`;
     let values = [request.params.email];
 
