@@ -41,6 +41,22 @@ router.put('/delete/:email?', (request, response, next) => {
     })
 }, (request, response, next) => {
     // remove existing contacts
+    let query = `DELETE FROM Push_Token WHERE memberid=$1`;
+    let values = [request.params.email];
+
+    pool.query(query, values)
+    .then(result => {
+        next()
+    })
+    .catch(err => {
+        console.log("Error deleting from push_token")
+        response.status(404).send({
+            msesage: 'SQL Error while deleting from contacts'
+        })
+    })
+
+}, (request, response, next) => {
+    // remove existing contacts
     let query = `DELETE FROM Contacts WHERE memberid_a=$1 OR memberid_b=$1`;
     let values = [request.params.email];
 
