@@ -26,31 +26,37 @@ const router = express.Router()
  */ 
 router.put('/delete/:email?', (request, response, next) => {
 
-    let query1 = `DELETE FROM Credentials WHERE Credentials.memberid = (SELECT memberid FROM Members WHERE Members.email = $1)`;
-    let query2 = `DELETE FROM Members WHERE Members.memberid = (SELECT memberid FROM Members WHERE Members.email = 'your@email.com');`
-    let values = [request.body.email];
+    let query1= `DELETE FROM Credentials WHERE Credentials.memberid = (SELECT memberid FROM Members WHERE Members.email = $1)`;
+    let values = [request.params.email];
 
-    pool.query(query1, values)
+    pool.query(query, values)
     .then(result => {
         next()
-    }).catch(err => {
+    })
+    .catch(err => {
         console.log("error deleting credentials: " + err)
         response.status(404).send({
             message: 'Failed to delete: Resource does not exist'
         });
     });
 
-    pool.query(query2, values)
+}, (request, response) => {
+
+    let query = `DELETE FROM Members WHERE Members.memberid = (SELECT memberid FROM Members WHERE Members.email = $1)`;
+    let values = [request.params.email];
+
+    pool.query(query, values)
     .then(result => {
         response.status(202).send({
             message: 'Delete successful'
-        }).catch(err => {
+        })
+    })
+    .catch(err => {
             console.log("error deleting user: " + err)
             response.status(404).send({
                 message: 'Failed to delete: Resource does not exist'
             });
         });
-    });
 });
 
 /**
