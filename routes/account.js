@@ -41,7 +41,7 @@ router.put('/delete/:email?', (request, response, next) => {
     })
 }, (request, response, next) => {
     // remove existing contacts
-    let query = `DELETE FROM Push_Token WHERE memberid=$1`;
+    let query = `DELETE FROM Push_Token WHERE memberid=(SELECT memberid FROM Members WHERE Members.email = $1)`;
     let values = [request.params.email];
 
     pool.query(query, values)
@@ -57,7 +57,7 @@ router.put('/delete/:email?', (request, response, next) => {
 
 }, (request, response, next) => {
     // remove existing contacts
-    let query = `DELETE FROM Contacts WHERE memberid_a=$1 OR memberid_b=$1`;
+    let query = `DELETE FROM Contacts WHERE memberid_a=(SELECT memberid FROM Members WHERE Members.email = $1) OR memberid_b=(SELECT memberid FROM Members WHERE Members.email = $1)`;
     let values = [request.params.email];
 
     pool.query(query, values)
