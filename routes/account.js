@@ -26,7 +26,7 @@ const router = express.Router()
  */ 
 router.put('/delete/:email?', (request, response, next) => {
 
-    let query1= `DELETE FROM Credentials WHERE Credentials.memberid = (SELECT memberid FROM Members WHERE Members.email = $1)`;
+    let query= `DELETE FROM Credentials WHERE Credentials.memberid = (SELECT memberid FROM Members WHERE Members.email = $1)`;
     let values = [request.params.email];
 
     pool.query(query, values)
