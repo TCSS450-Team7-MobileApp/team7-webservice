@@ -66,7 +66,7 @@ router.get(
     },
     (request, response) => {
         // perform the Select*
-        let query = `SELECT Members.FirstName AS FirstName, Members.LastName AS LastName, Members.Username AS Username, Members.Email AS Email
+        let query = `SELECT Members.MemberId as id, Members.FirstName AS FirstName, Members.LastName AS LastName, Members.Username AS Username, Members.Email AS Email
                         FROM Contacts LEFT JOIN Members ON Members.MemberID = Contacts.MemberID_B 
                         WHERE MemberID_A=$1
                         ORDER BY LastName ASC`;
@@ -132,8 +132,22 @@ router.post(
                     message: 'SQL error',
                 });
             });
-    },
-    (request, response) => {
+    }, (request, response, next) => {
+        // verify that friend does not already exist!
+        let query = `SELECT* FROM Contacts WHERE MemberID_A=$1 AND MemberID_B=$2`
+        let values = [request.params.memberid, request.body.memberid];
+
+        pool.query(query, values)
+            .then((result) => {
+                if (result.rowCount==0) {
+                    response.status(200).send({
+                        message: 'pending friend request already exists.'
+                    })
+                } else {
+                    next()
+                }
+            })
+    },(request, response) => {
         // insert new unverified friend
         let query =
             'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0), (DEFAULT, $2, $1, 0)';
@@ -267,28 +281,55 @@ router.post(
  * where :memberid? is the current user. The app should pass in the body the memberid of the user to be removed.
  */
 router.delete(
-    '/delete/:memberid?',
+    '/delete/:memberida/:memberidb',
     middleware.checkToken,
-    (request, response) => {
-        // middleware.checkToken will verify that MemberID_A is the requester
+    (request, response, next) => {
+        // verify that a friend exists
+        let query = `SELECT Verified FROM Contacts WHERE MemberID_A=$1`;
+        let values = [request.params.memberida];
 
-        let query = `DELETE FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$1)`;
-        let values = [request.params.memberid, request.body.MemberB];
-
-        pool.query(query, values).then((result) => {
-            response
-                .status(200)
-                .send({
-                    message: 'Friend successfully deleted',
+        pool.query(query, values)
+        .then((result) => {
+            response.verified = result.rows[0];
+            if ((response.verified == 0 || response.verified == 1) && result.rowCount!=0) {
+                // valid verification
+                next()
+            } else {
+                console.log('SQL result is empty: no existing contact');
+                response.status(200).send({
+                    message: 'No existing contact to delete'
                 })
-                .catch((err) => {
-                    console.log('error deleting: ' + err);
-                    response.status(400).send({
-                        message: 'Error deleting user from friendsList',
-                    });
-                });
+            }
+        })
+        .catch((err) => {
+            console.log('error verifying existing friend: ' + err);
+            response.status(400).send({
+                message: 'SQL error verifying friends'
+            })
+        })
+
+    }, (request, response) => {
+        // middleware.checkToken will verify that a token holder is the requester
+
+        let query = response.verified==0 ? 
+             `DELETE FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$1) AND Verified=0` : 
+             `DELETE FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$1) AND Verified=1`;
+        
+        let values = [request.params.memberida, request.params.memberidb];
+
+        pool.query(query, values)
+        .then((result) => {
+                response.status(200)
+                .send({
+                    message: 'Friend successfully deleted'
+                })
+        })
+        .catch((err) => {
+            console.log('error deleting: ' + err);
+                response.status(400).send({
+                    message: 'Error deleting user from friendsList'
+            });
         });
-    }
-);
+});
 
 module.exports = router;

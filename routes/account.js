@@ -25,32 +25,85 @@ const router = express.Router()
  * @apiError (404: Missing Parameters) {String} message "Failed to delete: Resource does not exist"
  */ 
 router.put('/delete/:email?', (request, response, next) => {
+    // verify email exists
+    let query = `SELECT * FROM Members WHERE Email=$1`;
+    let values = [request.params.email];
 
-    let query1 = `DELETE FROM Credentials WHERE Credentials.memberid = (SELECT memberid FROM Members WHERE Members.email = $1)`;
-    let query2 = `DELETE FROM Members WHERE Members.memberid = (SELECT memberid FROM Members WHERE Members.email = 'your@email.com');`
-    let values = [request.body.email];
+    pool.query(query, values)
+    .then(result => {
+        if (result.rowCount == 0) {
+            response.status(200).send({
+                message: 'Email not found, delete aborted.'
+            })
+        } else {
+            next()
+        }
+    })
+}, (request, response, next) => {
+    // remove existing contacts
+    let query = `DELETE FROM Push_Token WHERE memberid=(SELECT memberid FROM Members WHERE Members.email = $1)`;
+    let values = [request.params.email];
 
-    pool.query(query1, values)
+    pool.query(query, values)
     .then(result => {
         next()
-    }).catch(err => {
+    })
+    .catch(err => {
+        console.log("Error deleting from push_token")
+        response.status(404).send({
+            msesage: 'SQL Error while deleting from contacts'
+        })
+    })
+
+}, (request, response, next) => {
+    // remove existing contacts
+    let query = `DELETE FROM Contacts WHERE memberid_a=(SELECT memberid FROM Members WHERE Members.email = $1) OR memberid_b=(SELECT memberid FROM Members WHERE Members.email = $1)`;
+    let values = [request.params.email];
+
+    pool.query(query, values)
+    .then(result => {
+        next()
+    })
+    .catch(err => {
+        console.log("Error deleting from contacts")
+        response.status(404).send({
+            msesage: 'SQL Error while deleting from contacts'
+        })
+    })
+
+}, (request, response, next) => {
+    // delete from credentials
+    let query= `DELETE FROM Credentials WHERE Credentials.memberid = (SELECT memberid FROM Members WHERE Members.email = $1)`;
+    let values = [request.params.email];
+
+    pool.query(query, values)
+    .then(result => {
+        next()
+    })
+    .catch(err => {
         console.log("error deleting credentials: " + err)
         response.status(404).send({
-            message: 'Failed to delete: Resource does not exist'
+            message: 'SQL error while deleting from credentials'
         });
     });
 
-    pool.query(query2, values)
+}, (request, response) => {
+    // delete from members
+    let query = `DELETE FROM Members WHERE Members.memberid = (SELECT memberid FROM Members WHERE Members.email = $1)`;
+    let values = [request.params.email];
+
+    pool.query(query, values)
     .then(result => {
         response.status(202).send({
             message: 'Delete successful'
-        }).catch(err => {
+        })
+    })
+    .catch(err => {
             console.log("error deleting user: " + err)
             response.status(404).send({
                 message: 'Failed to delete: Resource does not exist'
             });
         });
-    });
 });
 
 /**

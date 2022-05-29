@@ -64,11 +64,10 @@ router.post(
         //Retrieve data from query params
         const first = request.body.first;
         const last = request.body.last;
-        const username = isStringProvided(request.body.username)
-            ? request.body.username
-            : request.body.email;
+        const username = request.body.username;
         const email = request.body.email;
         const password = request.body.password;
+        
 
         //Verify that the caller supplied all the parameters
         //In js, empty strings or null values evaluate to false
