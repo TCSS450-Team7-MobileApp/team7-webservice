@@ -284,37 +284,9 @@ router.delete(
     '/delete/:memberida/:memberidb',
     middleware.checkToken,
     (request, response, next) => {
-        // verify that a friend exists
-        let query = `SELECT Verified FROM Contacts WHERE MemberID_A=$1`;
-        let values = [request.params.memberida];
-
-        pool.query(query, values)
-        .then((result) => {
-            response.verified = result.rows[0];
-            if ((response.verified == 0 || response.verified == 1) && result.rowCount!=0) {
-                // valid verification
-                next()
-            } else {
-                console.log('SQL result is empty: no existing contact');
-                response.status(200).send({
-                    message: 'No existing contact to delete'
-                })
-            }
-        })
-        .catch((err) => {
-            console.log('error verifying existing friend: ' + err);
-            response.status(400).send({
-                message: 'SQL error verifying friends'
-            })
-        })
-
-    }, (request, response) => {
         // middleware.checkToken will verify that a token holder is the requester
 
-        let query = response.verified==0 ? 
-             `DELETE FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$1) AND Verified=0` : 
-             `DELETE FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$1) AND Verified=1`;
-        
+        let query = `DELETE FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$1)`;
         let values = [request.params.memberida, request.params.memberidb];
 
         pool.query(query, values)
