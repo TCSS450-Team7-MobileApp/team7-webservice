@@ -28,6 +28,7 @@ const router = express.Router();
  * with a given userId. If no friends, should still return an empty list.
  *
  * @apiParam {Number} userId the userId to get the friends list from.
+ * @apiParam {Number} verified to return either verified or friend requests.
  *
  * @apiSuccess {Number} friendsCount the number of friends returned.
  * @apiSuccess {Object[]} friendsList the list of friends in the friends table.
@@ -38,79 +39,7 @@ const router = express.Router();
  * Call this query with BASE_URL/friendsList/MemberID
  */
 router.get(
-    '/:memberid?',
-    (request, response, next) => {
-        // validate memberid of user requesting friends list
-        if (request.params.memberid === undefined) {
-            response.status(400).send({
-                message: 'no memberid request sent!',
-            });
-        } else {
-            next();
-        }
-    },
-    (request, response, next) => {
-        // validate that the memberid exists
-        let query = `SELECT * FROM Credentials WHERE MemberID=$1`;
-        let values = [request.params.memberid];
-
-        pool.query(query, values)
-            .then((result) => {
-                next();
-            })
-            .catch((error) => {
-                response.status(400).send({
-                    message: 'SQL Error',
-                    error: error,
-                });
-            });
-    },
-    (request, response) => {
-        // perform the Select*
-        let query = `SELECT Members.MemberId as id, Members.FirstName AS FirstName, Members.LastName AS LastName, Members.Username AS Username, Members.Email AS Email
-                        FROM Contacts LEFT JOIN Members ON Members.MemberID = Contacts.MemberID_B 
-                        WHERE MemberID_A=$1 AND Contacts.verified = 1
-                        ORDER BY LastName ASC`;
-        let values = [request.params.memberid];
-
-        pool.query(query, values)
-            .then((result) => {
-                response.send({
-                    userId: request.params.memberid,
-                    rowCount: result.rowCount,
-                    rows: result.rows,
-                });
-            })
-            .catch((err) => {
-                response.status(400).send({
-                    message: 'SQL Error',
-                    error: err,
-                });
-            });
-    }
-);
-
-
-/**
- * @api {get} /friendsList/requests Display existing friends in database.
- * @apiName GetFriends
- * @apiGroup Friends
- *
- * @apiDescription Request a list of all current friends from the server
- * with a given userId. If no friends, should still return an empty list.
- *
- * @apiParam {Number} userId the userId to get the friends list from.
- *
- * @apiSuccess {Number} friendsCount the number of friends returned.
- * @apiSuccess {Object[]} friendsList the list of friends in the friends table.
- *
- * @apiError (404: userId not found) {String} message "userId not found"
- * @apiError (400: SQL Error) {String} the reported SQL error details
- *
- * Call this query with BASE_URL/friendsList/MemberID
- */
- router.get(
-    '/requests/:memberid/:verified',
+    '/:memberid/:verified',
     (request, response, next) => {
         // validate memberid of user requesting friends list
         if (request.params.memberid === undefined) {
@@ -157,6 +86,86 @@ router.get(
                 response.status(400).send({
                     message: 'SQL Error',
                     error: err,
+                });
+            });
+    }
+);
+
+
+/**
+ * @api {post} /friendsList/request/:memberid? Send a friend request
+ * @apiName friendRequest
+ * @apiGroup Friends
+ *
+ * @apiParam {String} MemberA the memberid of the Member requesting a friend
+ * @apiParam {String} MemberB the memberid of the user being requested as a friend
+ *
+ * @apiDescription a post to initiate a friend request
+ *
+ * @apiSuccess (200) {String} message "friend request sent"
+ *
+ * @apiError (404: memberid not found) {String} message: "memberid not found"
+ *
+ * To use this query, the URL should be BASE_URL/friendsList/request/:memberid?
+ * where :memberid? is the current user
+ */
+router.post(
+    '/request/:memberid?',
+    middleware.checkToken,
+    (request, response, next) => {
+        // middleware will check that the requester is using a valid token
+
+        // verify that the requested contact is a valid user
+        let query = 'SELECT * FROM Members WHERE MemberID=$1';
+        let values = [request.body.memberid];
+
+        pool.query(query, values)
+            .then((result) => {
+                if (result.rowCount == 0) {
+                    response.status(400).send({
+                        message: 'memberid not found!',
+                    });
+                } else {
+                    next();
+                }
+            })
+            .catch((err) => {
+                console.log('error finding user: ' + err);
+                response.status(400).send({
+                    message: 'SQL error',
+                });
+            });
+    }, (request, response, next) => {
+        // verify that friend does not already exist!
+        let query = `SELECT* FROM Contacts WHERE MemberID_A=$1 AND MemberID_B=$2`
+        let values = [request.params.memberid, request.body.memberid];
+
+        pool.query(query, values)
+            .then((result) => {
+                if (result.rowCount==0) {
+                    response.status(200).send({
+                        message: 'pending friend request already exists.'
+                    })
+                } else {
+                    next()
+                }
+            })
+    },(request, response) => {
+        // insert new unverified friend
+        let query =
+            'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0), (DEFAULT, $2, $1, 0)';
+        let values = [request.params.memberid, request.body.memberid];
+
+        pool.query(query, values)
+            .then((result) => {
+                response.status(200).send({
+                    message: 'Friend request successfully sent',
+                });
+            })
+            .catch((err) => {
+                console.log('error adding: ' + err);
+                response.status(400).send({
+                    message: 'SQL Error: Insert failed',
                 });
             });
     }
