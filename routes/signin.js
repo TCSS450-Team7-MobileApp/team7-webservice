@@ -46,7 +46,7 @@ const config = {
  *
  */
 router.get(
-    '/?',
+    '/',
     (request, response, next) => {
         // Sign in if not signed in yet
         if (
