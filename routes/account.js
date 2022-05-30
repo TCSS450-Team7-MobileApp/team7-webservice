@@ -2,6 +2,8 @@
 const { response } = require('express')
 const { request } = require('express')
 const express = require('express')
+const req = require('express/lib/request')
+const jwt = require('../middleware/jwt')
 
 //Access the connection to Heroku Database
 const pool = require('../utilities/exports').pool
@@ -43,6 +45,7 @@ router.put('/delete/:email?', (request, response, next) => {
     // remove existing contacts
     let query = `DELETE FROM Push_Token WHERE memberid=(SELECT memberid FROM Members WHERE Members.email = $1)`;
     let values = [request.params.email];
+
 
     pool.query(query, values)
     .then(result => {
@@ -104,6 +107,70 @@ router.put('/delete/:email?', (request, response, next) => {
                 message: 'Failed to delete: Resource does not exist'
             });
         });
+});
+
+/**
+ * @api {put} /account/change/:type/:newname Change a name for the user
+ * @apiName ChangeName
+ * @apiGroup Put
+ * 
+ * @apiParam {String} The type of name you would like to change (first,last,user)
+ * 
+ * @apiSuccess (Success 201) {boolean} success true when the user is deleted
+ * @apiSuccess (Success 201) {String} email the email of the user deleted 
+ * 
+ * @apiError (404: Missing Parameters) {String} message "Failed to delete: Resource does not exist"
+ */ 
+ router.put('/change/:userid/:type/:newname', 
+ (request, response, next) => {
+    // verify email exists
+    let query = `SELECT * FROM Members WHERE MemberID=$1`
+    let values = [request.params.userid]
+
+    console.log()
+    pool.query(query, values)
+    .then(result => {
+        if (result.rowCount == 0) {
+            response.status(200).send({
+                message: "cannot find the member"
+            })
+        } else {
+            next()
+        }
+    })
+}, (request, response) => {
+    // change the name 
+    let query = ""
+    if (request.params.type == 'first'){
+        query = `UPDATE Members SET firstname = $1 WHERE memberid = $2`
+    }
+    else if (request.params.type == 'last'){
+        query = `UPDATE Members SET lastname = $1 WHERE memberid = $2`
+    }
+    else if (request.params.type == 'user'){
+        query = `UPDATE Members SET username = $1 WHERE memberid = $2`
+    }
+    let values = [request.params.newname, request.params.userid]
+
+    if (query == ""){
+        response.status(400).send({
+            message: 'No name of that type'
+        })
+    }
+    else{
+        pool.query(query, values)
+        .then(result => {
+            response.status(202).send({
+                message: 'Name Updated'
+            })
+        })
+        .catch(err => {
+                console.log("error updating name: " + err)
+                response.status(404).send({
+                    message: 'Failed to update name'
+                });
+            });
+    }
 });
 
 /**
