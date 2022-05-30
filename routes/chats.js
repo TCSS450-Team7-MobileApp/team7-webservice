@@ -175,29 +175,63 @@ console.log(request.decoded)
     let values = [request.params.chatId, request.decoded.memberid]
     pool.query(insert, values)
         .then(result => {
-            next()
+            if (result.rowCount > 0) {
+                //insertion success. Attach the message to the Response obj
+                response.chatMembers = result.rows
+                //Pass on to next to push
+                next()
+            } else {
+                response.status(400).send({
+                    "message": "unknown error"
+                })
+            }
         }).catch(err => {
             response.status(400).send({
                 message: "SQL Error 1",
                 error: err
             })
         })
-}, (request, response) => {
+}, (request, response, next) => {
     // Populate a blank message
     let insert = `INSERT INTO Messages(PrimaryKey, ChatId, Message, MemberId)
                   VALUES (DEFAULT, $1, '', $2)`
     let values = [request.params.chatId, request.decoded.memberid]
     pool.query(insert, values)
         .then(result => {
-            response.send({
-                success: true
-            })
+            console.log('Inserting blank message');
+            next()
         }).catch(err => {
             response.status(400).send({
                 message: "SQL Error 2",
                 error: err
             })
         })
+}, (request, response) => {
+    // Send a notification of this chat addition to ALL members with registered tokens
+    let query = `SELECT token FROM Push_Token
+                INNER JOIN ChatMembers ON
+                Push_Token.memberid=ChatMembers.memberid
+                WHERE ChatMembers.chatId=$1`
+    let values = [request.params.chatId]
+
+    pool.query(query, values)
+        .then(result => {
+            result.rows.forEach(entry => 
+            msg_functions.updateChatRoom(
+                entry.token, 
+                response.chatMembers, // NOTE: this may return multiple chat members, likely return array?
+                request.params.chatId
+                ))
+            response.send({
+                success:true
+            })
+         }).catch(err => {
+            response.status(400).send({
+            message: "SQL Error on select from push token",
+            error: err
+        })
+    })
+
 });
 
 /**
