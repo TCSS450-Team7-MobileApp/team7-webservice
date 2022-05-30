@@ -20,7 +20,7 @@ let isStringProvided = validation.isStringProvided;
 const router = express.Router();
 
 /**
- * @api {get} /friendsList Display existing friends in database.
+ * @api {get} /friendsList/verified Display existing friends in database.
  * @apiName GetFriends
  * @apiGroup Friends
  *
