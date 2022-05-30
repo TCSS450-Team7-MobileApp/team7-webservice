@@ -51,9 +51,15 @@ router.get(
 
         pool.query(query, values)
             .then((result) => {
-                response.status(200).send({
-                    rows: result.rows,
-                });
+                if (result.rowCount==0) {
+                    response.status(200).send({
+                        message: 'No results found!'
+                    })
+                } else {
+                    response.status(200).send({
+                        rows: result.rows,
+                    });
+                }
             })
             .catch((err) => {
                 console.log(err);
@@ -101,9 +107,15 @@ router.get(
 
         pool.query(query, values)
             .then((result) => {
-                response.status(200).send({
-                    rows: result.rows,
-                });
+                if (result.rowCount==0) {
+                    response.status(200).send({
+                        message: 'No results found!'
+                    })
+                } else {
+                    response.status(200).send({
+                        rows: result.rows,
+                    });
+                }
             })
             .catch((err) => {
                 console.log(err);
@@ -133,7 +145,7 @@ router.get(
  * Call this query with BASE_URL/search/username/USERNAME
  */
  router.get(
-    '/name/:first?/:last?',
+    '/name/:first/:last',
     (request, response, next) => {
         // validate userId of user requesting friends list
         if (request.params.first === undefined || request.params.last === undefined) {
@@ -151,9 +163,15 @@ router.get(
 
         pool.query(query, values)
             .then((result) => {
-                response.status(200).send({
-                    rows: result.rows,
-                });
+                if (result.rowCount==0) {
+                    response.status(200).send({
+                        message: 'No results found!'
+                    })
+                } else {
+                    response.status(200).send({
+                        rows: result.rows,
+                    });
+                }
             })
             .catch((err) => {
                 console.log(err);
