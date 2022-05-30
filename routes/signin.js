@@ -46,8 +46,9 @@ const config = {
  *
  */
 router.get(
-    '/',
+    '/?',
     (request, response, next) => {
+        // Sign in if not signed in yet
         if (
             isStringProvided(request.headers.authorization) &&
             request.headers.authorization.startsWith('Basic ')
