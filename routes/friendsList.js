@@ -12,6 +12,7 @@ const pool = require('../utilities/exports').pool;
 
 // Define the middleware
 const middleware = require('../middleware');
+const jwt = require('../middleware/jwt');
 
 const validation = require('../utilities/exports').validation;
 let isStringProvided = validation.isStringProvided;
@@ -293,7 +294,7 @@ router.delete(
         .then((result) => {
                 response.status(200)
                 .send({
-                    message: 'Friend successfully deleted'
+                    message: jwt.decoded
                 })
         })
         .catch((err) => {
