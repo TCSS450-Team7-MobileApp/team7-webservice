@@ -37,7 +37,7 @@ const processCurrentWeather = (req, res, next) => {
         const humidity = Math.round(req.body.data.current.humidity);
         const feels_like = Math.round(req.body.data.current.feels_like);
         const prob_precipitation = req.body.data.hourly[0].pop;
-        const icon = req.body.data.current.weather.icon;
+        const icon = req.body.data.current.weather[0].icon;
 
         req.body.processedCurrentData = {
             temp: temp,
