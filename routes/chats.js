@@ -114,6 +114,7 @@ router.put("/:chatId/", (request, response, next) => {
                     message: "Chat ID not found"
                 })
             } else {
+                response.name = result.rows[0].name;
                 next()
             }
         }).catch(error => {
@@ -194,11 +195,14 @@ console.log(request.decoded)
 }, (request, response, next) => {
     // Populate a blank message
     let insert = `INSERT INTO Messages(PrimaryKey, ChatId, Message, MemberId)
-                  VALUES (DEFAULT, $1, '', $2)`
+                  VALUES (DEFAULT, $1, '', $2)
+                  RETURNING Message, Timestamp`
     let values = [request.params.chatId, request.decoded.memberid]
     pool.query(insert, values)
         .then(result => {
             console.log('Inserting blank message');
+            response.message = result.rows[0].message;
+            response.timestamp = result.rows[0].timestamp;
             next()
         }).catch(err => {
             response.status(400).send({
@@ -220,7 +224,10 @@ console.log(request.decoded)
             msg_functions.updateChatRoom(
                 entry.token, 
                 response.chatMembers, // NOTE: this may return multiple chat members, likely return array?
-                request.params.chatId
+                request.params.chatId,
+                response.name,
+                response.message,
+                response.timestamp
                 ))
             response.send({
                 success:true
