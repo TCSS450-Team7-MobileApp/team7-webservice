@@ -12,6 +12,7 @@ const pool = require('../utilities/exports').pool;
 
 // Define the middleware
 const middleware = require('../middleware');
+const jwt = require('../middleware/jwt');
 
 const validation = require('../utilities/exports').validation;
 let isStringProvided = validation.isStringProvided;
@@ -19,7 +20,7 @@ let isStringProvided = validation.isStringProvided;
 const router = express.Router();
 
 /**
- * @api {get} /friendsList Display existing friends in database.
+ * @api {get} /friendsList/verified Display existing friends in database.
  * @apiName GetFriends
  * @apiGroup Friends
  *
@@ -27,6 +28,7 @@ const router = express.Router();
  * with a given userId. If no friends, should still return an empty list.
  *
  * @apiParam {Number} userId the userId to get the friends list from.
+ * @apiParam {Number} verified to return either verified or friend requests.
  *
  * @apiSuccess {Number} friendsCount the number of friends returned.
  * @apiSuccess {Object[]} friendsList the list of friends in the friends table.
@@ -37,7 +39,7 @@ const router = express.Router();
  * Call this query with BASE_URL/friendsList/MemberID
  */
 router.get(
-    '/:memberid?',
+    '/:memberid/:verified',
     (request, response, next) => {
         // validate memberid of user requesting friends list
         if (request.params.memberid === undefined) {
@@ -66,11 +68,11 @@ router.get(
     },
     (request, response) => {
         // perform the Select*
-        let query = `SELECT Members.FirstName AS FirstName, Members.LastName AS LastName, Members.Username AS Username, Members.Email AS Email
+        let query = `SELECT Members.MemberId as id, Members.FirstName AS FirstName, Members.LastName AS LastName, Members.Username AS Username, Members.Email AS Email
                         FROM Contacts LEFT JOIN Members ON Members.MemberID = Contacts.MemberID_B 
-                        WHERE MemberID_A=$1
+                        WHERE MemberID_A=$1 AND Contacts.verified = $2
                         ORDER BY LastName ASC`;
-        let values = [request.params.memberid];
+        let values = [request.params.memberid, request.params.verified];
 
         pool.query(query, values)
             .then((result) => {
@@ -88,6 +90,7 @@ router.get(
             });
     }
 );
+
 
 /**
  * @api {post} /friendsList/request/:memberid? Send a friend request
@@ -132,8 +135,22 @@ router.post(
                     message: 'SQL error',
                 });
             });
-    },
-    (request, response) => {
+    }, (request, response, next) => {
+        // verify that friend does not already exist!
+        let query = `SELECT* FROM Contacts WHERE MemberID_A=$1 AND MemberID_B=$2`
+        let values = [request.params.memberid, request.body.memberid];
+
+        pool.query(query, values)
+            .then((result) => {
+                if (result.rowCount==0) {
+                    response.status(200).send({
+                        message: 'pending friend request already exists.'
+                    })
+                } else {
+                    next()
+                }
+            })
+    },(request, response) => {
         // insert new unverified friend
         let query =
             'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0), (DEFAULT, $2, $1, 0)';
@@ -267,28 +284,27 @@ router.post(
  * where :memberid? is the current user. The app should pass in the body the memberid of the user to be removed.
  */
 router.delete(
-    '/delete/:memberid?',
+    '/delete/:memberida/:memberidb',
     middleware.checkToken,
-    (request, response) => {
-        // middleware.checkToken will verify that MemberID_A is the requester
+    (request, response, next) => {
+        // middleware.checkToken will verify that a token holder is the requester
 
         let query = `DELETE FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$1)`;
-        let values = [request.params.memberid, request.body.MemberB];
+        let values = [request.params.memberida, request.params.memberidb];
 
-        pool.query(query, values).then((result) => {
-            response
-                .status(200)
+        pool.query(query, values)
+        .then((result) => {
+                response.status(200)
                 .send({
-                    message: 'Friend successfully deleted',
+                    message: jwt.decoded
                 })
-                .catch((err) => {
-                    console.log('error deleting: ' + err);
-                    response.status(400).send({
-                        message: 'Error deleting user from friendsList',
-                    });
-                });
+        })
+        .catch((err) => {
+            console.log('error deleting: ' + err);
+                response.status(400).send({
+                    message: 'Error deleting user from friendsList'
+            });
         });
-    }
-);
+});
 
 module.exports = router;

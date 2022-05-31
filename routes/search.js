@@ -16,7 +16,7 @@ let isStringProvided = validation.isStringProvided;
 const router = express.Router();
 
 /**
- * @api {get} /email:?  search for an existing user by email address.
+ * @api {get} email/email:?  search for an existing user by email address.
  * @apiName GetProfile
  * @apiGroup Profile
  *
@@ -30,10 +30,10 @@ const router = express.Router();
  * @apiError (404: userId not found) {String} message "userId not found"
  * @apiError (400: SQL Error) {String} the reported SQL error details
  *
- * Call this query with BASE_URL/search/EMAIL
+ * Call this query with BASE_URL/search/email/EMAIL
  */
 router.get(
-    '/:email?',
+    '/email/:email?',
     (request, response, next) => {
         // validate userId of user requesting friends list
         if (request.params.email === undefined) {
@@ -51,9 +51,127 @@ router.get(
 
         pool.query(query, values)
             .then((result) => {
-                response.status(200).send({
-                    rows: result.rows,
+                if (result.rowCount==0) {
+                    response.status(200).send({
+                        message: 'No results found!'
+                    })
+                } else {
+                    response.status(200).send({
+                        rows: result.rows,
+                    });
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+                response.status(400).send({
+                    result: 'ERROR',
+                    error: err,
                 });
+            });
+    }
+);
+
+/**
+ * @api {get} /username/username:?  search for an existing user by username.
+ * @apiName GetProfile
+ * @apiGroup Profile
+ *
+ * @apiDescription Search for user by username: Query to return a user's first, last, and email by username.
+ *
+ * @apiParam {String} username the username to retrieve the profile from.
+ *
+ * @apiSuccess {Object} the profile returned.
+ * @apiSuccess {Number} rowCount the number of users found (should always be 1 for found, 0 for does not exist);
+ *
+ * @apiError (404: userId not found) {String} message "userId not found"
+ * @apiError (400: SQL Error) {String} the reported SQL error details
+ *
+ * Call this query with BASE_URL/search/username/USERNAME
+ */
+ router.get(
+    '/username/:username?',
+    (request, response, next) => {
+        // validate userId of user requesting friends list
+        if (request.params.username === undefined) {
+            response.status(400).send({
+                message: 'no username request sent!',
+            });
+        } else {
+            next();
+        }
+    },
+    (request, response) => {
+        // Search for User by Username
+        let query = `SELECT FirstName, LastName, Email FROM Members WHERE Username=$1`;
+        let values = [request.params.username];
+
+        pool.query(query, values)
+            .then((result) => {
+                if (result.rowCount==0) {
+                    response.status(200).send({
+                        message: 'No results found!'
+                    })
+                } else {
+                    response.status(200).send({
+                        rows: result.rows,
+                    });
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+                response.status(400).send({
+                    result: 'ERROR',
+                    error: err,
+                });
+            });
+    }
+);
+
+/**
+ * @api {get} /name/username:?  search for an existing user by username.
+ * @apiName GetProfile
+ * @apiGroup Profile
+ *
+ * @apiDescription Search for user by username: Query to return a user's first, last, and email by username.
+ *
+ * @apiParam {String} username the username to retrieve the profile from.
+ *
+ * @apiSuccess {Object} the profile returned.
+ * @apiSuccess {Number} rowCount the number of users found (should always be 1 for found, 0 for does not exist);
+ *
+ * @apiError (404: userId not found) {String} message "userId not found"
+ * @apiError (400: SQL Error) {String} the reported SQL error details
+ *
+ * Call this query with BASE_URL/search/username/USERNAME
+ */
+ router.get(
+    '/name/:first/:last',
+    (request, response, next) => {
+        // validate userId of user requesting friends list
+        if (request.params.first === undefined || request.params.last === undefined) {
+            response.status(400).send({
+                message: 'missing a name request!',
+            });
+        } else {
+            next();
+        }
+    },
+    (request, response) => {
+        // Search for User by First and Last
+        let query = `SELECT Email, Username FROM Members WHERE FirstName=$1 AND LastName=$2`;
+        let values = [request.params.first, request.params.last];
+
+        pool.query(query, values)
+            .then((result) => {
+                if (result.rowCount==0) {
+                    response.status(200).send({
+                        message: 'No results found!'
+                    })
+                } else {
+                    response.status(200).send({
+                        rows: result.rows,
+                    });
+                }
             })
             .catch((err) => {
                 console.log(err);
