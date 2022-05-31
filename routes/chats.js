@@ -461,9 +461,11 @@ router.get("members/:chatId", (request, response, next) => {
                 })
             } else {
                 for (chat in result.rows) {
+                    console.log("chat in result.rows" + chat);
                     for (users in response.usernames) {
+                        console.log("user in response.usernames" + users);
                         if (chat.chatid == users.chatid)
-                            chat.usernames = response.usernames
+                            chat["usernames"] = users.username
                     }
                 }
                 // let chatRooms = [];
