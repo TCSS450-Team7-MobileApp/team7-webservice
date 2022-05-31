@@ -426,9 +426,10 @@ router.get("members/:chatId", (request, response, next) => {
         })
 }, (request, response, next) => {
     //get the usernames
-    let query = `SELECT DISTINCT members.username 
+    let query = `SELECT members.username, chatmembers.chatid
                 FROM chatmembers JOIN members on chatmembers.memberid = members.memberid 
-                WHERE chatid IN (select chatid from chatmembers where memberid=$1) AND ChatMembers.Memberid!=$1`
+                WHERE chatid IN (select chatid from chatmembers where memberid=$1) AND ChatMembers.Memberid!=$1
+                SORT BY ChatMembers.ChatId ASC`
     let values = [request.params.memberid]
 
     pool.query(query, values)
@@ -438,7 +439,7 @@ router.get("members/:chatId", (request, response, next) => {
                     message: "No chats for existing user."
                 })
             } else {
-                //stash the chatId
+                //stash the chat usernames
                 response.usernames = result.rows;
                 next()
             }
@@ -460,6 +461,21 @@ router.get("members/:chatId", (request, response, next) => {
                     message: "No messages for existing user."
                 })
             } else {
+                for (chat in result.rows) {
+                    for (users in response.usernames) {
+                        if (chat.chatid == users.chatid)
+                            chat.usernames = response.usernames
+                    }
+                }
+                // let chatRooms = [];
+                // let count=0;
+                // for (i=0; i<response.username.rowCount; i++) {
+                //     for (j=0; j<result.rowCount; j++) {
+                //         if(response.usernames[i]==result.rows[j]){
+                //             chatRooms[count] = 0;
+                //         }
+                //     }
+                // }
                 response.status(200).send({
                     usernames: response.usernames,
                     messages: result.rows
