@@ -428,8 +428,7 @@ router.get("members/:chatId", (request, response, next) => {
     //get the usernames
     let query = `SELECT members.username, chatmembers.chatid
                 FROM chatmembers JOIN members on chatmembers.memberid = members.memberid 
-                WHERE chatid IN (select chatid from chatmembers where memberid=$1) AND ChatMembers.Memberid!=$1
-                SORT BY ChatMembers.ChatId ASC`
+                WHERE chatid IN (select chatid from chatmembers where memberid=$1) AND ChatMembers.Memberid!=$1`
     let values = [request.params.memberid]
 
     pool.query(query, values)
