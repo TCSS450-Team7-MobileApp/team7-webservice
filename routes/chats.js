@@ -464,20 +464,9 @@ router.get("members/:chatId", (request, response, next) => {
                     chat.usernames = []
                     response.usernames.forEach( users => {
                         if (chat.chatid == users.chatid)
-                            chat.usernames.append(users.username);
+                            chat.usernames.push(users.username);
                     })
-                });
-
-                
-                // let chatRooms = [];
-                // let count=0;
-                // for (i=0; i<response.username.rowCount; i++) {
-                //     for (j=0; j<result.rowCount; j++) {
-                //         if(response.usernames[i]==result.rows[j]){
-                //             chatRooms[count] = 0;
-                //         }
-                //     }
-                // }
+                })
                 response.status(200).send({
                     usernames: response.usernames,
                     messages: result.rows
