@@ -470,8 +470,8 @@ router.get("members/:chatId", (request, response, next) => {
                 })
                 
                 response.status(200).send({
-                    usernames: response.usernames,
-                    messages: result.rows
+                    //usernames: response.usernames,
+                    chats: result.rows
                 })
             }
         }).catch(error => {
