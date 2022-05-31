@@ -467,7 +467,6 @@ router.get("members/:chatId", (request, response, next) => {
                             chat.usernames.push(users.username);
                     })
                 })
-                
                 response.status(200).send({
                     usernames: response.usernames,
                     messages: result.rows
