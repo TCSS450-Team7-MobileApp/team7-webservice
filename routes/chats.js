@@ -460,14 +460,15 @@ router.get("members/:chatId", (request, response, next) => {
                     message: "No messages for existing user."
                 })
             } else {
-                for (chat in result.rows) {
-                    console.log("chat in result.rows" + chat);
-                    for (users in response.usernames) {
-                        console.log("user in response.usernames" + users);
+                result.rows.forEach( chat => {
+                    chat.usernames = []
+                    response.usernames.forEach( users => {
                         if (chat.chatid == users.chatid)
-                            chat["usernames"] = users.username
-                    }
-                }
+                            chat.usernames.append(users.username);
+                    })
+                });
+
+                
                 // let chatRooms = [];
                 // let count=0;
                 // for (i=0; i<response.username.rowCount; i++) {
