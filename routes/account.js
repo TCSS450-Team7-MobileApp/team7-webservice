@@ -214,7 +214,7 @@ jwt.checkToken,
             firstname: result.rows[0].firstname,
             lastname: result.rows[0].lastname,
             username: result.rows[0].username,
-            id: result.rows[0].memberid,
+            memberid: result.rows[0].memberid,
             token: request.headers['authorization']
         })
     })
