@@ -96,7 +96,7 @@ router.get(
         });
     },
     (request, response) => {
-        const theQuery = `SELECT firstname, lastname, username, saltedhash, salt, Credentials.memberid FROM Credentials
+        const theQuery = `SELECT firstname, email, lastname, username, saltedhash, salt, Credentials.memberid FROM Credentials
                       INNER JOIN Members ON
                       Credentials.memberid=Members.memberid 
                       WHERE Members.email=$1`;
