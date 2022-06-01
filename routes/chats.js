@@ -172,13 +172,13 @@ console.log(request.decoded)
     //Insert the memberId into the chat
     let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
                   VALUES ($1, $2)
-                  RETURNING *`
+                  RETURNING ChatMembers.MemberId`
     let values = [request.params.chatId, request.decoded.memberid]
     pool.query(insert, values)
         .then(result => {
             if (result.rowCount > 0) {
                 //insertion success. Attach the message to the Response obj
-                response.chatMembers = result.rows
+                response.chatMemberPut = result.rows
                 //Pass on to next to push
                 next()
             } else {
@@ -189,6 +189,23 @@ console.log(request.decoded)
         }).catch(err => {
             response.status(400).send({
                 message: "SQL Error 1",
+                error: err
+            })
+        })
+}, (request, response, next) => {
+    let query = `Select Username FROM Members
+                JOIN ChatMembers ON ChatMembers.MemberId=Members.MemberId
+                WHERE ChatMembers.ChatId=$1`
+    let values = [request.params.chatId]
+
+    pool.query(query, values)
+        .then(result => {
+            response.usernames = result.rows;
+            next()
+        })
+        .catch(err => {
+            response.status(400).send({
+                message: "SQL Error getting Usernames",
                 error: err
             })
         })
@@ -223,7 +240,7 @@ console.log(request.decoded)
             result.rows.forEach(entry => 
             msg_functions.updateChatRoom(
                 entry.token, 
-                response.chatMembers, // NOTE: this may return multiple chat members, likely return array?
+                response.usernames, // NOTE: this may return multiple chat members, likely return array?
                 request.params.chatId,
                 response.name,
                 response.message,
@@ -459,7 +476,7 @@ router.get("members/:chatId", (request, response, next) => {
     //get the most recent message
     let query = `SELECT DISTINCT Messages.ChatId, Max(Chats.Name) AS Name, Max(Message) AS Message, Max(to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' )) AS Timestamp 
                 FROM Messages JOIN Chats ON Messages.ChatId=Chats.ChatId
-                WHERE chatid IN (Select ChatID From ChatMembers WHERE MemberId=$1) GROUP BY ChatId`
+                WHERE Messages.ChatId IN (Select ChatMembers.ChatID From ChatMembers WHERE MemberId=$1) GROUP BY Messages.ChatId`
     let values = [request.params.memberid]
     pool.query(query, values)
         .then(result => {
