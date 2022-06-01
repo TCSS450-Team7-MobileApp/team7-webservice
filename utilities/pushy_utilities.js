@@ -30,10 +30,16 @@ function sendMessageToIndividual(token, message) {
 //use to send message to a specific client by the token
 function updateChatRoom(token, usernames, chat, name, message, timestamp) {
 
+    var names = [usernames];
+
+    for (var i =0; i< names.length ;i++) {
+        names[i] = usernames[i].username;
+    }
+
     //build the message for Pushy to send
     var data = {
         "type": "chat",
-        "usernames": usernames,
+        "usernames": names,
         "chatid": chat,
         "name": name,
         "recent_message":message,

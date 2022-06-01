@@ -478,12 +478,6 @@ router.get("members/:chatId", (request, response, next) => {
     let query = `SELECT DISTINCT Messages.ChatId, Max(Chats.Name) AS Name, Max(Message) AS Message, Max(to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' )) AS Timestamp 
                 FROM Messages JOIN Chats ON Messages.ChatId=Chats.ChatId
                 WHERE Messages.ChatId IN (Select ChatMembers.ChatID From ChatMembers WHERE MemberId=$1) GROUP BY Messages.ChatId`
-               
-    
-    /*let query = `SELECT DISTINCT Messages.ChatId, Max(Chats.Name) AS Name, Max(Message) AS Message, Max(to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' )) AS Timestamp 
-    FROM Messages JOIN Chats ON Messages.ChatId=Chats.ChatId
-    WHERE chatid IN (Select ChatID From ChatMembers WHERE MemberId=$1) GROUP BY ChatId`
-    */
     
     let values = [request.params.memberid]
     pool.query(query, values)
