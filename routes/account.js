@@ -215,6 +215,7 @@ jwt.checkToken,
             last: result.rows[0].lastname,
             username: result.rows[0].username,
             id: result.rows[0].memberid,
+            token: request.headers['authorization']
         })
     })
     .catch(err => {
