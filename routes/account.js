@@ -211,8 +211,8 @@ jwt.checkToken,
     .then(result => {
         response.status(202).send({
             email: result.rows[0].email,
-            first: result.rows[0].firstname,
-            last: result.rows[0].lastname,
+            firstname: result.rows[0].firstname,
+            lastname: result.rows[0].lastname,
             username: result.rows[0].username,
             id: result.rows[0].memberid,
             token: request.headers['authorization']
