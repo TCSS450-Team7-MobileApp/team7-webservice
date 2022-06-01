@@ -174,6 +174,60 @@ router.put('/delete/:email?', (request, response, next) => {
 });
 
 /**
+ * @api {get} /account/ Change a name for the user
+ * @apiName getAccountInfo
+ * @apiGroup GET
+ * 
+ * @apiParam {String} 
+ * 
+ * @apiSuccess (Success 201) {boolean} success true when the user is deleted
+ * @apiSuccess (Success 201) {String} email the email of the user deleted 
+ * 
+ * @apiError (404: Missing Parameters) {String} message "Failed to delete: Resource does not exist"
+ */ 
+ router.get('/', 
+jwt.checkToken,
+ (request, response, next) => {
+    // verify email exists
+    let query = `SELECT * FROM Members WHERE MemberID=$1`
+    let values = [request.decoded.memberid]
+    pool.query(query, values)
+    .then(result => {
+        if (result.rowCount == 0) {
+            response.status(200).send({
+                message: "cannot find the member"
+            })
+        } else {
+            next()
+        }
+    })
+}, (request, response) => {
+    // change the name 
+    let query = "SELECT * FROM Members where memberid = $1"
+
+    let values = [request.decoded.memberid]
+
+    pool.query(query, values)
+    .then(result => {
+        response.status(202).send({
+            email: result.rows[0].email,
+            first: result.rows[0].firstname,
+            last: result.rows[0].lastname,
+            username: result.rows[0].username,
+            id: result.rows[0].memberid,
+        })
+    })
+    .catch(err => {
+            console.log("error updating name: " + err)
+            response.status(404).send({
+                message: 'Failed to update name'
+            });
+        });
+});
+
+
+
+/**
  * CHANGE PASSWORD
  */
 router.put('/update_pass', (request, response, next) => {
