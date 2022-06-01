@@ -13,7 +13,63 @@ const pool = require('../utilities/exports').pool;
 const validation = require('../utilities/exports').validation;
 let isStringProvided = validation.isStringProvided;
 
+const jwt = require('../middleware/jwt')
+
 const router = express.Router();
+
+
+/**
+ * @api {get} searched?  search for user with searched details 
+ * @apiName GetProfile
+ * @apiGroup Profile
+ *
+ * @apiDescription Search for user by username, first name, last name: Query to return a user's first, last, and nick name by email.
+ *
+ * @apiParam {String} searched the searched detail.
+ *
+ * @apiSuccess {Object} the profile returned.
+ * @apiSuccess {Number} rowCount the number of users found if > 1 it exists and if 0 it doesn't;
+ *
+ * @apiError (404: userId not found) {String} message "userId not found"
+ * @apiError (400: SQL Error) {String} the reported SQL error details
+ *
+ * Call this query with BASE_URL/search/SEARCHED
+ */
+ router.get(
+    '/:searched',
+    jwt.checkToken,
+    (request, response) => {
+        // Search for User
+        let query = 'SELECT FirstName, LastName, Username, MemberId, Email FROM Members '+
+        'WHERE Username LIKE $1 OR FirstName LIKE $1 OR LastName LIKE $1';
+        let values = ['%'+request.params.searched+'%'];
+
+        pool.query(query, values)
+            .then((result) => {
+                if (result.rowCount==0) {
+                    response.status(200).send({
+                        message: 'No results found!'
+                    })
+                } else {
+                    response.status(200).send({
+                        rows: result.rows,
+                    });
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+                response.status(400).send({
+                    result: 'ERROR',
+                    error: err,
+                });
+            });
+    }
+);
+
+
+
+
+
 
 /**
  * @api {get} email/email:?  search for an existing user by email address.
@@ -182,5 +238,9 @@ router.get(
             });
     }
 );
+
+
+
+
 
 module.exports = router;
