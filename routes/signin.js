@@ -140,6 +140,7 @@ router.get(
                         success: true,
                         message: 'Authentication successful!',
                         token: token,
+                        email: result.rows[0].email,
                         firstname: result.rows[0].firstname,
                         lastname: result.rows[0].lastname,
                         username: result.rows[0].username,
