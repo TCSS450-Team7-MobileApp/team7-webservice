@@ -300,6 +300,7 @@ console.log(request.decoded)
     //validate email exists 
     memberids = new Array();
 
+
     for (var key in request.body.memberids) {
       
         let query = 'SELECT MemberId FROM Members WHERE MemberId=$1'
@@ -312,7 +313,7 @@ console.log(request.decoded)
                         message: "email not found"
                     })
                 } else {
-                    memberids[0] = response.rows.memberId;
+                    memberids.push(response.rows.memberId);
                 }
             }).catch(error => {
                 response.status(400).send({
