@@ -310,7 +310,7 @@ console.log(request.decoded)
             .then(result => {
                 if (result.rowCount == 0) {
                     response.status(404).send({
-                        message: "email not found"
+                        message: "ERROR ON LOOPING"
                     })
                 } else {
                     memberids.push(response.rows.memberId);
