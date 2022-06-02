@@ -16,6 +16,8 @@ const jwt = require('../middleware/jwt');
 
 const validation = require('../utilities/exports').validation;
 let isStringProvided = validation.isStringProvided;
+const msg_functions = require('../utilities/exports').messaging
+
 
 const router = express.Router();
 
@@ -126,6 +128,10 @@ router.post(
                         message: 'memberid not found!',
                     });
                 } else {
+                    response.username = result.rows.username;
+                    response.firstname = result.rows.firstname;
+                    response.lastname = result.rows.lastname;
+                    response.email = result.rows.email;
                     next();
                 }
             })
@@ -137,7 +143,7 @@ router.post(
             });
     }, (request, response, next) => {
         // verify that friend does not already exist!
-        let query = `SELECT* FROM Contacts WHERE MemberID_A=$2 AND MemberID_B=$1`
+        let query = `SELECT MemberID_B FROM Contacts WHERE MemberID_A=$2 AND MemberID_B=$1`
         let values = [request.params.memberid, request.body.memberid];
 
         pool.query(query, values)
@@ -147,20 +153,28 @@ router.post(
                         message: 'pending friend request already exists.'
                     })
                 } else {
+                    response.memberid_b = result.rows.memberid_b;
                     next()
                 }
             })
-    },(request, response) => {
+    },(request, response, next) => {
         // insert new unverified friend
         let query =
-            'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0)';
+            `INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0)
+            RETURNING MemberID_B, Verified`;
         let values = [request.params.memberid, request.body.memberid];
 
         pool.query(query, values)
             .then((result) => {
-                response.status(200).send({
-                    message: 'Friend request successfully sent',
-                });
+                if (result.rowCount != 0) {
+                    response.status(400).send({
+                        message: 'Error stashing MemberID_B!'
+                    })
+                } else {
+                    response.memberid_b = result.rows.memberid_b;
+                    response.status = result.rows.verified;
+                    next()
+                }
             })
             .catch((err) => {
                 console.log('error adding: ' + err);
@@ -168,8 +182,36 @@ router.post(
                     message: 'SQL Error: Insert failed',
                 });
             });
-    }
-);
+    }, (request, response) => {
+    // Send a notification of this chat addition to ALL members with registered tokens
+    let query = `SELECT token FROM Push_Token
+                INNER JOIN Contacts ON
+                Push_Token.memberid=Contacts.memberid
+                WHERE Contacts.memberid=$1`
+    let values = [request.body.memberid]
+
+    pool.query(query, values)
+        .then(result => {
+            result.rows.forEach(entry => 
+            msg_functions.friendRequest(
+                entry.token, 
+                response.memberid_b,
+                response.username,
+                response.firstname,
+                response.lastname,
+                response.email,
+                response.status
+                ))
+            response.send({
+                success:true
+            })
+        }).catch(err => {
+            response.status(400).send({
+            message: "SQL Error on select from push token",
+            error: err
+        })
+    })
+});
 
 /**
  * @api {post} /friendsList/verify/:memberid? Verify
