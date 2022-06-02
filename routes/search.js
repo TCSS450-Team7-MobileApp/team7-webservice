@@ -41,8 +41,8 @@ const router = express.Router();
     (request, response) => {
         // Search for User
         let query = 'SELECT FirstName, LastName, Username, MemberId as id, Email FROM Members '+
-        'WHERE Username LIKE $1 OR FirstName LIKE $1 OR LastName LIKE $1';
-        let values = ['%'+request.params.searched+'%'];
+        'WHERE (Username LIKE $1 OR FirstName LIKE $1 OR LastName LIKE $1) AND MemberId != $2';
+        let values = ['%'+request.params.searched+'%', request.decoded.memberid];
 
         pool.query(query, values)
             .then((result) => {
