@@ -137,7 +137,7 @@ router.post(
             });
     }, (request, response, next) => {
         // verify that friend does not already exist!
-        let query = `SELECT* FROM Contacts WHERE MemberID_A=$1 AND MemberID_B=$2`
+        let query = `SELECT* FROM Contacts WHERE MemberID_A=$2 AND MemberID_B=$1`
         let values = [request.params.memberid, request.body.memberid];
 
         pool.query(query, values)
