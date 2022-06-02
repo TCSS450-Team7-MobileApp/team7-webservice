@@ -142,7 +142,7 @@ router.post(
 
         pool.query(query, values)
             .then((result) => {
-                if (result.rowCount==0) {
+                if (result.rowCount!=0) {
                     response.status(200).send({
                         message: 'pending friend request already exists.'
                     })
