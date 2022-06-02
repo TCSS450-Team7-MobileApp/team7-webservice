@@ -301,10 +301,10 @@ console.log(request.decoded)
     memberids = new Array();
     console.log(request.body.memberids);
 
-    for (var key in request.body.memberids) {
+    for (i=0; i< request.body.memberids.length; i++) {
       
         let query = 'SELECT MemberId FROM Members WHERE MemberId=$1'
-        let values = [key]
+        let values = [request.body.memberids[i]]
 
         pool.query(query, values)
             .then(result => {
