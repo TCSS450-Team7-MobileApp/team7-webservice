@@ -40,7 +40,7 @@ const router = express.Router();
     jwt.checkToken,
     (request, response) => {
         // Search for User
-        let query = 'SELECT FirstName, LastName, Username, MemberId, Email FROM Members '+
+        let query = 'SELECT FirstName, LastName, Username, MemberId as id, Email FROM Members '+
         'WHERE Username LIKE $1 OR FirstName LIKE $1 OR LastName LIKE $1';
         let values = ['%'+request.params.searched+'%'];
 
