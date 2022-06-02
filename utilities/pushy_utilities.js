@@ -60,12 +60,17 @@ function updateChatRoom(token, usernames, chat, name, message, timestamp) {
 }
 
 //use to display friend requests in real time
-function friendRequest(token, email) {
+function friendRequest(token, id, username, firstname, lastname, email, status) {
 
     //build the message for Pushy to send
     var data = {
         "type": "friend_request",
+        "id":id,
+        "username":username,
+        "firstname":firstname,
+        "lastname":lastname,
         "email": email,
+        "status":status
     }
 
 
