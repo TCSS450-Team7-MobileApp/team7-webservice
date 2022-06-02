@@ -301,7 +301,7 @@ console.log(request.decoded)
     memberids = new Array();
     console.log(request.body.memberids);
 
-    //for (i=0; i< request.body.memberids.length; i++) {
+    for (i=0; i< request.body.memberids.length; i++) {
       
         let query = 'SELECT MemberId FROM Members WHERE MemberId=$1'
         let values = [request.body.memberids[i]]
@@ -313,7 +313,7 @@ console.log(request.decoded)
                         message: "ERROR ON LOOPING"
                     })
                 } else {
-                    memberids.push(response.rows.memberId);
+                    memberids.push(result.rows);
                 }
             }).catch(error => {
                 response.status(400).send({
@@ -321,7 +321,7 @@ console.log(request.decoded)
                     error: error
                 })
             })  
-    //}
+    }
     next()                                
 }, (request, response, next) => {
         //validate email does not already exist in the chat
@@ -350,7 +350,7 @@ console.log(request.decoded)
         let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
                   VALUES ($1, $2)
                   RETURNING ChatMembers.MemberId`
-        let values = [request.params.chatId, memberids[i]]
+        let values = [request.params.chatId, memberids[0]]
         pool.query(insert, values)
             .then(result => {
                 if (result.rowCount > 0) {
