@@ -153,7 +153,7 @@ router.post(
     },(request, response) => {
         // insert new unverified friend
         let query =
-            'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0), (DEFAULT, $2, $1, 0)';
+            'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0)';
         let values = [request.params.memberid, request.body.memberid];
 
         pool.query(query, values)
