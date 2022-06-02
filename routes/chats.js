@@ -317,7 +317,7 @@ console.log(request.decoded)
                 }
             }).catch(error => {
                 response.status(400).send({
-                    message: "SQL Error",
+                    message: "SQL Error in loop",
                     error: error
                 })
             })  
@@ -346,21 +346,24 @@ console.log(request.decoded)
 
 }, (request, response, next) => {
     //Insert the memberId into the chat
-    //for (i=0; i<memberids.length; i++) {
+    memberids = new Array();
+    console.log(request.body.memberids);
+
+    for (i=0; i< request.body.memberids.length; i++) {
         let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
                   VALUES ($1, $2)
                   RETURNING ChatMembers.MemberId`
-        let values = [request.params.chatId, memberids[0]]
+        let values = [request.params.chatId, request.body.memberids[i]]
         pool.query(insert, values)
             .then(result => {
                 if (result.rowCount > 0) {
                     //insertion success. Attach the message to the Response obj
-                    response.chatMemberPut = result.rows
+                    memberids.push(result.rows);
                     //Pass on to next to push
-                    next()
+                    
                 } else {
                     response.status(400).send({
-                        "message": "unknown error"
+                        "message": "unknown error in second loop"
                     })
                 }
             }).catch(err => {
@@ -369,8 +372,9 @@ console.log(request.decoded)
                     error: err
                 })
             })
-    //}
-    
+    }
+    next()
+
 }, (request, response, next) => {
     let query = `Select Username FROM Members
                 JOIN ChatMembers ON ChatMembers.MemberId=Members.MemberId
