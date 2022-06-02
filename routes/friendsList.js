@@ -242,10 +242,28 @@ router.post(
                 });
             });
     },
+    (request, response, next) => {
+        // update the existing friend
+        let query =
+            'UPDATE Contacts SET Verified=1 WHERE (MemberID_A=$1 AND MemberID_B=$2)';
+        let values = [request.memberid_a, request.memberid_b];
+
+        pool.query(query, values)
+            .then((result) => {
+                next()
+            })
+            .catch((err) => {
+                console.log('SQL Error verifying friend');
+                response.status(400).send({
+                    message:
+                        'SQL error updating verification in Contacts table',
+                });
+            });
+    },
     (request, response) => {
         // update the existing friend
         let query =
-            'UPDATE Contacts SET Verified=1 WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$1)';
+            'INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $2, $1, 1)';
         let values = [request.memberid_a, request.memberid_b];
 
         pool.query(query, values)
