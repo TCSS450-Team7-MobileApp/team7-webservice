@@ -301,7 +301,7 @@ console.log(request.decoded)
     memberids = new Array();
     console.log(request.body.memberids);
 
-    for (i=0; i< request.body.memberids.length; i++) {
+    //for (i=0; i< request.body.memberids.length; i++) {
       
         let query = 'SELECT MemberId FROM Members WHERE MemberId=$1'
         let values = [request.body.memberids[i]]
@@ -321,7 +321,7 @@ console.log(request.decoded)
                     error: error
                 })
             })  
-    }
+    //}
     next()                                
 }, (request, response, next) => {
         //validate email does not already exist in the chat
@@ -346,7 +346,7 @@ console.log(request.decoded)
 
 }, (request, response, next) => {
     //Insert the memberId into the chat
-    for (i=0; i<memberids.length; i++) {
+    //for (i=0; i<memberids.length; i++) {
         let insert = `INSERT INTO ChatMembers(ChatId, MemberId)
                   VALUES ($1, $2)
                   RETURNING ChatMembers.MemberId`
@@ -369,7 +369,7 @@ console.log(request.decoded)
                     error: err
                 })
             })
-    }
+    //}
     
 }, (request, response, next) => {
     let query = `Select Username FROM Members
