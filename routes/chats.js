@@ -299,7 +299,7 @@ console.log(request.decoded)
 }, (request, response, next) => {
     //validate email exists 
     memberids = new Array();
-
+    console.log(request.body.memberids);
 
     for (var key in request.body.memberids) {
       
