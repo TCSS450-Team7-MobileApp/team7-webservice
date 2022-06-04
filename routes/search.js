@@ -41,10 +41,9 @@ const router = express.Router();
     (request, response) => {
         // Search for User
         let query = 'SELECT FirstName, LastName, Username, MemberId as id, Email FROM Members '+
-        'WHERE (Username ILIKE $1 OR FirstName ILIKE $1 OR LastName ILIKE $1) '+
-        'AND MemberId != $2 AND NOT EXISTS '+
+        'WHERE Username ILIKE $1 AND MemberId != $2 AND NOT EXISTS '+
         '(SELECT memberid_a, memberid_b from contacts where members.memberid = contacts.memberid_a or members.memberid = contacts.memberid_b)'
-        let values = ['%'+request.params.searched+'%', request.decoded.memberid];
+        let values = [request.params.searched+'%', request.decoded.memberid];
 
         pool.query(query, values)
             .then((result) => {
