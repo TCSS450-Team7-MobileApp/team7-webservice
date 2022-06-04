@@ -40,9 +40,9 @@ const router = express.Router();
     jwt.checkToken,
     (request, response) => {
         // Search for User
-        let query = 'SELECT FirstName, LastName, Username, MemberId as id, Email FROM Members '+
-        'WHERE Username ILIKE $1 AND MemberId != $2 AND NOT EXISTS '+
-        '(SELECT memberid_a, memberid_b from contacts where members.memberid = contacts.memberid_a or members.memberid = contacts.memberid_b)'
+        let query = ` SELECT DISTINCT FirstName, LastName, Username, MemberId as id, Email 
+        FROM Members JOIN Contacts ON Members.MemberId = Contacts.MemberId_A 
+        WHERE Username ILIKE $1 AND MemberId_a != $2;`
         let values = [request.params.searched+'%', request.decoded.memberid];
 
         pool.query(query, values)
