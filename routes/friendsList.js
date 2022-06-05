@@ -144,7 +144,8 @@ router.post(
             });
     }, (request, response, next) => {
         // verify that friend does not already exist!
-        let query = `SELECT MemberID_B FROM Contacts WHERE MemberID_A=$2 AND MemberID_B=$1`
+        let query = `SELECT MemberID_B FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2)
+                    OR (MemberID_B=$1 AND MemberID_A=$2)`
         let values = [request.params.memberid, request.body.memberid];
 
         pool.query(query, values)
@@ -154,7 +155,6 @@ router.post(
                         message: 'pending friend request already exists.'
                     })
                 } else {
-                    response.memberid_b = result.rows.memberid_b;
                     next()
                 }
             })
@@ -169,7 +169,7 @@ router.post(
             .then((result) => {
                 if (result.rowCount != 0) {
                     response.status(400).send({
-                        message: 'Error stashing MemberID_B!'
+                        message: 'Error inserting friend request!'
                     })
                 } else {
                     response.memberid_b = result.rows.memberid_b;
@@ -185,28 +185,34 @@ router.post(
             });
     }, (request, response) => {
     // Send a notification of this chat addition to ALL members with registered tokens
-    let query = `SELECT DISTINCT token FROM Push_Token
+    let query = `SELECT token FROM Push_Token
                 INNER JOIN Contacts ON
                 Push_Token.memberid = Contacts.memberid_a
-                WHERE Contacts.memberid_a=$1 OR Contacts.memberid_b=$1`
+                WHERE Contacts.memberid_b=$1`
     let values = [request.body.memberid]
 
     pool.query(query, values)
         .then(result => {
-            result.rows.forEach(entry => 
-            msg_functions.friendRequest(
-                entry.token, 
-                response.memberid_b,
-                response.username,
-                response.firstname,
-                response.lastname,
-                response.email,
-                response.status
-                ))
-            response.status(200).send({
-                message: "Pushy requests sent",
-                success:true
-            })
+            if (result.rowCount==0) {
+                response.status(200).send({
+                    message: "No push token found, notification failed."
+                })
+            } else {
+                result.rows.forEach(entry => 
+                msg_functions.friendRequest(
+                    entry.token, 
+                    response.memberid_b,
+                    response.username,
+                    response.firstname,
+                    response.lastname,
+                    response.email,
+                    response.status
+                    ))
+                response.status(200).send({
+                    message: "Pushy requests sent",
+                    success:true
+                })
+            }
         }).catch(err => {
             response.status(400).send({
             message: "SQL Error on select from push token",
