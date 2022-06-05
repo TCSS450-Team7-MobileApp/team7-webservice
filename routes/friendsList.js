@@ -113,8 +113,8 @@ router.get(
  * where :memberid? is the current user
  */
 router.post(
-    '/request/:memberid?',
-    middleware.checkToken,
+    '/request/',
+    jwt.checkToken,
     (request, response, next) => {
         // middleware will check that the requester is using a valid token
 
@@ -146,7 +146,7 @@ router.post(
         // verify that friend does not already exist!
         let query = `SELECT MemberID_B FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2)
                     OR (MemberID_B=$1 AND MemberID_A=$2)`
-        let values = [request.params.memberid, request.body.memberid];
+        let values = [request.decoded.memberid, request.body.memberid];
 
         pool.query(query, values)
             .then((result) => {
@@ -163,7 +163,7 @@ router.post(
         let query =
             `INSERT into Contacts (PrimaryKey, MemberID_A, MemberID_B, Verified) VALUES (DEFAULT, $1, $2, 0)
             RETURNING MemberID_B, Verified`;
-        let values = [request.params.memberid, request.body.memberid];
+        let values = [request.decoded.memberid, request.body.memberid];
 
         pool.query(query, values)
             .then((result) => {
