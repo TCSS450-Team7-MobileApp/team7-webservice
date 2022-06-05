@@ -114,7 +114,7 @@ router.get(
  */
 router.post(
     '/request/',
-    jwt.checkToken,
+    middleware.checkToken,
     (request, response, next) => {
         // middleware will check that the requester is using a valid token
 
@@ -198,7 +198,7 @@ router.post(
                     message: "No push token found, notification failed."
                 })
             } else {
-                result.rows.forEach(entry => 
+                result.rows.forEach((entry) => 
                 msg_functions.friendRequest(
                     entry.token, 
                     response.memberid_b,
