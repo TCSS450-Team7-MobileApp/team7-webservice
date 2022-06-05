@@ -214,7 +214,7 @@ router.put('/delete/:email?', (request, response, next) => {
  * @apiName getAccountInfo
  * @apiGroup GET
  * 
- * @apiParam {String} 
+ * @apiParam {String} The account to be deleted 
  * 
  * @apiSuccess (Success 201) {boolean} success true when the user is deleted
  * @apiSuccess (Success 201) {String} email the email of the user deleted 

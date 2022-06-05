@@ -22,7 +22,54 @@ const coords = (lat, lng) => {
 const optionalParams = '&exclude=alerts,minutely&units=imperial';
 const keyParam = `&appid=${apiKey}`;
 
-// Call the endpoint with https://url/weather?lat=123&lng=123
+/**
+ * @api {get} /weather/?lat={latitude}&lng={longitude} Request formatted weather data with specified coordinates.
+ * @apiName GetWeather
+ * @apiGroup Weather
+ *
+ * @apiHeader {String} authorization "username:password" uses Basic Auth
+ *
+ * @apiSuccess {boolean} success true when API response processing is successful
+ * @apiSuccess {String} currentWeather nicely formatted weather data
+ * @apiSuccess {String} currentWeather nicely formatted current weather forecast data
+ * @apiSuccess {String} hourlyData nicely formatted hourly weather forecast data
+ * @apiSuccess {String} dailyData nicely formatted daily weather forecast data
+ *
+ *  * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 201 OK
+ *     {
+ *       "success": true,
+ *       "currentWeather": {
+ *                              temp: 69,
+ *                              description: Clear Sky,
+ *                              minTemp: 42,
+ *                              maxtemp: 72,
+ *                              humidity: 20,
+ *                              feels_like: 63,
+ *                              prob_precipitation: 0.2,
+ *                              icon: 01d
+ *                         },
+ *       "hourlyData": {
+ *                          [hours: 1, temp: 65, icon: 01d],
+ *                          [hours: 2, temp: 65, icon: 01d],
+ *                          [...],
+ *                          [hours: 23, temp: 65, icon: 01d],
+ *                     },
+ *       "dailyData": {
+ *                          [day: Sun, temp: 65, icon: 01d],
+ *                          [day: Mon, temp: 65, icon: 01d],
+ *                          [...],
+ *                          [day: Sat, temp: 65, icon: 01d],
+ *                    }
+ *     }
+ *
+ * @apiError (404: Missing required information) {String} message "Missing required information"
+ *
+ * @apiError (404: Invalid parameters) {String} message "Invalid parameters"
+ *
+ * @apiError (400: API Request Failed) {String} message "Weather API request failed"
+ *
+ */
 router.get(
     '/',
     (req, res, next) => {
