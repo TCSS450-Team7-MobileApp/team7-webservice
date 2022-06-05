@@ -173,7 +173,7 @@ router.post(
                     })
                 } else {
                     response.memberid_b = result.rows.memberid_b;
-                    response.status = result.rows.verified;
+                    response.verify = result.rows.verified;
                     next()
                 }
             })
@@ -206,7 +206,7 @@ router.post(
                     response.firstname,
                     response.lastname,
                     response.email,
-                    response.status
+                    response.verify
                     )
                 );
                 response.status(200).send({
