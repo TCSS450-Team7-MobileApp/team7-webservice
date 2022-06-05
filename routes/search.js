@@ -41,7 +41,7 @@ const router = express.Router();
     (request, response) => {
         // Search for User
         let query = ` SELECT DISTINCT FirstName, LastName, Username, MemberId as id, Email 
-        FROM Members JOIN Contacts ON Members.MemberId = Contacts.MemberId_A 
+        FROM Members FULL JOIN Contacts ON Members.MemberId = Contacts.MemberId_A 
         WHERE Username ILIKE $1 AND MemberId_a != $2;`
         let values = [request.params.searched+'%', request.decoded.memberid];
 
