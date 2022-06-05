@@ -1,5 +1,5 @@
 /**
- * Convert to the correct timezone of the server
+ * Convert to the correct timezone using the provided offset
  */
 const convertTimeZone = (req, res, next) => {
     const currentTime = new Date();
