@@ -168,7 +168,7 @@ router.post(
         pool.query(query, values)
             .then((result) => {
                 if (result.rowCount == 0) {
-                    response.status(400).send({
+                    response.status(200).send({
                         message: 'Error inserting friend request!'
                     })
                 } else {
@@ -192,7 +192,7 @@ router.post(
     let values = [request.body.memberid]
 
     pool.query(query, values)
-        .then(result => {
+        .then((result) => {
             if (result.rowCount==0) {
                 response.status(200).send({
                     message: "No push token found, notification failed."
@@ -207,18 +207,19 @@ router.post(
                     response.lastname,
                     response.email,
                     response.status
-                    ))
+                    )
+                );
                 response.status(200).send({
                     message: "Pushy requests sent",
                     success:true
-                })
+                });
             }
-        }).catch(err => {
+        }).catch((err) => {
             response.status(400).send({
-            message: "SQL Error on select from push token",
-            error: err
-        })
-    })
+                message: 'SQL Error on select from push token',
+                error: err
+            });
+        });
 });
 
 /**
