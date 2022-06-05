@@ -129,10 +129,10 @@ router.post(
                         message: 'memberid not found!',
                     });
                 } else {
-                    response.username = result.rows.username;
-                    response.firstname = result.rows.firstname;
-                    response.lastname = result.rows.lastname;
-                    response.email = result.rows.email;
+                    response.username = result.rows[0].username;
+                    response.firstname = result.rows[0].firstname;
+                    response.lastname = result.rows[0].lastname;
+                    response.email = result.rows[0].email;
                     next();
                 }
             })
@@ -172,8 +172,8 @@ router.post(
                         message: 'Error inserting friend request!'
                     })
                 } else {
-                    response.memberid_b = result.rows.memberid_b;
-                    response.verify = result.rows.verified;
+                    response.memberid_b = result.rows[0].memberid_b;
+                    response.verify = result.rows[0].verified;
                     next()
                 }
             })
