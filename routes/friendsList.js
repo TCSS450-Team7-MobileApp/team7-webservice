@@ -167,7 +167,7 @@ router.post(
 
         pool.query(query, values)
             .then((result) => {
-                if (result.rowCount != 0) {
+                if (result.rowCount == 0) {
                     response.status(400).send({
                         message: 'Error inserting friend request!'
                     })
