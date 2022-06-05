@@ -10,13 +10,13 @@ const pool = require('../utilities/exports').pool
 const router = express.Router()
 
 /**
- * @api {delete} /account/delete/:email? Request to register a user
+ * @api {delete} /account/delete/:email? Request to delete a user
  * @apiName DeleteAccount
  * @apiGroup Delete
  * 
- * @apiParam {String} email a users email *unique
+ * @apiParam {String} email a user's email *unique
  * 
- * @apiParamExample {json} Request-Body-Example:
+ * @apiParamExample {json} Request-Param-Example:
  *  {
  *      "email":"cfb3@fake.email"
  *  }
@@ -148,12 +148,14 @@ router.put('/delete/:email?', (request, response, next) => {
  * @apiName ChangeName
  * @apiGroup Put
  * 
- * @apiParam {String} The type of name you would like to change (first,last,user)
+ * @apiParam {Number} userId the Memberid of the user requesting a password change.
+ * @apiParam {String} type The type of name you would like to change (first,last,user)
+ * @apiParam {String} newname the new name replacing the old one.
  * 
- * @apiSuccess (Success 201) {boolean} success true when the user is deleted
- * @apiSuccess (Success 201) {String} email the email of the user deleted 
+ * @apiSuccess (Success 202) {boolean} success true when the name is updated
+ * @apiSuccess (Success 202) {String} message 'Name Updated' on successful update 
  * 
- * @apiError (404: Missing Parameters) {String} message "Failed to delete: Resource does not exist"
+ * @apiError (400) {String} message "No name of that type"
  */ 
  router.put('/change/:userid/:type/:newname', 
  (request, response, next) => {
