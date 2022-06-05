@@ -185,10 +185,10 @@ router.post(
             });
     }, (request, response) => {
     // Send a notification of this chat addition to ALL members with registered tokens
-    let query = `SELECT token FROM Push_Token
+    let query = `SELECT DISTINCT token FROM Push_Token
                 INNER JOIN Contacts ON
-                Push_Token.memberid=Contacts.memberid
-                WHERE Contacts.memberid=$1`
+                Push_Token.memberid = Contacts.memberid_a
+                WHERE Contacts.memberid_a=$1 OR Contacts.memberid_b=$1`
     let values = [request.body.memberid]
 
     pool.query(query, values)
@@ -203,7 +203,8 @@ router.post(
                 response.email,
                 response.status
                 ))
-            response.send({
+            response.status(200).send({
+                message: "Pushy requests sent",
                 success:true
             })
         }).catch(err => {
