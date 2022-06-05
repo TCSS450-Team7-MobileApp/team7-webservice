@@ -260,6 +260,21 @@ console.log(request.decoded)
 
 /**
  * @api {put} /chats/addToChat/:chatid
+ * @apiName PutAddUsersToChat
+ * @apiGroup Chats
+ * 
+ * @apiDescription adds an array of users to a chat room and sends a pushy notification to all of them.
+ *  
+ * @apiParam {Number} chatId the id of the chat users are being added to
+ * @apiParam {Array} memberids the memberids of users being added to the chat.
+ * 
+ * @apiHeader {Number} the decoded member id from the jwt of the requester
+ * 
+ * @apiSuccess {message} success: true after a successful call to pushy utilities.
+ * 
+ * @apiError {400} Missing required information 
+ * @apiError {404} Query error
+ * @apiError {400} SQL errors
  */
  router.put("/addToChat/:chatId/", (request, response, next) => {
     //validate on empty parameters
@@ -441,8 +456,8 @@ console.log(request.decoded)
 });
 
 /**
- * @api {get} /chats/:chatId? Request to get the emails of user in a chat
- * @apiName GetChats
+ * @api {get} /chats/members/:chatId? Request to get the emails of user in a chat
+ * @apiName GetChatMembers
  * @apiGroup Chats
  * 
  * @apiHeader {String} authorization Valid JSON Web Token JWT
@@ -450,8 +465,7 @@ console.log(request.decoded)
  * @apiParam {Number} chatId the chat to look up. 
  * 
  * @apiSuccess {Number} rowCount the number of messages returned
- * @apiSuccess {Object[]} members List of members in the chat
- * @apiSuccess {String} messages.email The email for the member in the chat
+ * @apiSuccess {Object[]} members List of member emails in the chat
  * 
  * @apiError (404: ChatId Not Found) {String} message "Chat ID Not Found"
  * @apiError (400: Invalid Parameter) {String} message "Malformed parameter. chatId must be a number" 
@@ -576,20 +590,19 @@ router.get("members/:chatId", (request, response, next) => {
 });
 
 /**
- * @api {get} /chats/:memberId? Request to get the emails of user in a chat
- * @apiName GetChats
+ * @api {get} /chats/:memberId Request to get the email of user in a chat
+ * @apiName GetChatsForMember
  * @apiGroup Chats
  * 
  * @apiHeader {String} authorization Valid JSON Web Token JWT
  * 
- * @apiParam {Number} chatId the chat to look up. 
+ * @apiParam {Number} memberId the member whose chat rooms to look up. 
  * 
  * @apiSuccess {Number} rowCount the number of messages returned
- * @apiSuccess {Object[]} members List of members in the chat
- * @apiSuccess {String} messages.email The email for the member in the chat
+ * @apiSuccess {Object[]} chats List of chats for a user
+ * @apiSuccess (200: Empty results) {String} message "No chats for existing user"
  * 
- * @apiError (404: ChatId Not Found) {String} message "Chat ID Not Found"
- * @apiError (400: Invalid Parameter) {String} message "Malformed parameter. chatId must be a number" 
+ * @apiError (400: Invalid Parameter) {String} message "Malformed parameter. memberId must be a number" 
  * @apiError (400: Missing Parameters) {String} message "Missing required information"
  * 
  * @apiError (400: SQL Error) {String} message the reported SQL error details
@@ -691,7 +704,7 @@ router.get("members/:chatId", (request, response, next) => {
 });
 
 /**
- * @api {delete} /chats/:chatId?/:email? Request delete a user from a chat
+ * @api {delete} /chats/:chatId/:email Request delete a user from a chat
  * @apiName DeleteChats
  * @apiGroup Chats
  * 

@@ -193,7 +193,18 @@ router.post(
 );
 
 /**
- * Forgot Password
+ * @api {put} /forgotPass/:token  initiate email replacement for Forgot Password
+ * @apiName PutForgotPass
+ * @apiGroup register
+ * 
+ * @apiDescription verifies valid jwt of requester then sends email with a temporary password for rest
+ * 
+ * @apiParam token the JWT token of the user requesting a password reset
+ * 
+ * @apiSuccess (201) {JSON} success:true, temp_pass, email
+ * 
+ * @apiError (400) {String} message: No Verified User
+ * 
  */
  router.put('/forgotPass/:token', 
  (request, response, next) => {
@@ -236,6 +247,7 @@ router.post(
              //We successfully updated the password!
              response.status(201).send({
                  success: true,
+                 pass: temp_pass,
                  email: request.body.email,
              }); // TESTING VERIFICATION:
 
@@ -247,7 +259,7 @@ router.post(
                  },
                  config.secret,
                  {
-                     expiresIn: '1d',
+                     expiresIn: '14d',
                  }
              );
 
@@ -282,7 +294,12 @@ router.post(
 });
 
 /**
- * Forgot Password
+ * @api /register/resetPass/:token reset the password from email request
+ * @apiName PutResetPass
+ * @apiGroup Register
+ * 
+ * @apiDescription resets the password upon successful validation of temporary password.
+ * 
  */
  router.put('/resetPass/:token', 
  (request, response, next) => {
@@ -311,7 +328,7 @@ router.post(
  },
  (request, response) => {
      
-     const new_pass=request.body.new_pass;
+     const new_pass = request.body.new_pass;
 
      let salt = generateSalt(32);
      let salted_hash = generateHash(new_pass, salt);

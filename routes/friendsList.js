@@ -22,20 +22,21 @@ const msg_functions = require('../utilities/exports').messaging
 const router = express.Router();
 
 /**
- * @api {get} /friendsList/verified Display existing friends in database.
+ * @api {get} /friendsList/:memberid/:verified Display existing OR pending friends in database.
  * @apiName GetFriends
  * @apiGroup Friends
  *
- * @apiDescription Request a list of all current friends from the server
- * with a given userId. If no friends, should still return an empty list.
+ * @apiDescription Request a list of all current friends or friend requests from the server
+ * with a given memberId. If no friends, should still return an empty list.
  *
- * @apiParam {Number} userId the userId to get the friends list from.
+ * @apiParam {Number} memberId the userId to get the friends list from.
  * @apiParam {Number} verified to return either verified or friend requests.
  *
  * @apiSuccess {Number} friendsCount the number of friends returned.
  * @apiSuccess {Object[]} friendsList the list of friends in the friends table.
+ * @apiSuccess {Number} rowCount the number of rows returned
  *
- * @apiError (404: userId not found) {String} message "userId not found"
+ * @apiError (404: userId not found) {String} message "no memberid request sent!"
  * @apiError (400: SQL Error) {String} the reported SQL error details
  *
  * Call this query with BASE_URL/friendsList/MemberID
@@ -104,7 +105,7 @@ router.get(
  *
  * @apiDescription a post to initiate a friend request
  *
- * @apiSuccess (200) {String} message "friend request sent"
+ * @apiSuccess {String} message success: true after a successful pass to pushy util
  *
  * @apiError (404: memberid not found) {String} message: "memberid not found"
  *
@@ -223,7 +224,7 @@ router.post(
  *
  * @apiDescription a post to initiate a friend request
  *
- * @apiSuccess (200) {String} message "friend request sent"
+ * @apiSuccess (200) {String} message "friend verification successful"
  *
  * @apiError (404: memberid not found) {String} message: "memberid not found"
  *
@@ -326,7 +327,7 @@ router.post(
 
 /**
  * NOTE: THIS QUERY DOES NOT REQUIRE AUTHORIZATION
- * sl
+ * 
  * @api {put} /friendsList/delete/:memberid? Remove a friend from friend's list
  * @apiName deleteFriends
  * @apiGroup Friends
@@ -336,7 +337,7 @@ router.post(
  *
  * @apiDescription a query to delete a friend from friendsList
  *
- * @apiSuccess (200) {String} message "user deleted from friendsList"
+ * @apiSuccess (200) {String} decoded jwt
  *
  *  @apiError (404: memberid not found) {String} message "memberid not found"
  *
