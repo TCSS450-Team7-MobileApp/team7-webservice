@@ -374,10 +374,6 @@ router.delete(
 
         pool.query(query, values)
         .then((result) => {
-                response.status(200)
-                .send({
-                    message: jwt.decoded
-                })
                 next()
         })
         .catch((err) => {
@@ -387,7 +383,7 @@ router.delete(
             });
         });
     },
-    (request, response, next) => {
+    (request, response) => {
         let query = `DELETE FROM Contacts WHERE (MemberID_A=$2 AND MemberID_B=$1)`;
         let values = [request.params.memberida, request.params.memberidb];
 
@@ -397,7 +393,6 @@ router.delete(
                 .send({
                     message: jwt.decoded
                 })
-                next()
         })
         .catch((err) => {
             console.log('error deleting: ' + err);
