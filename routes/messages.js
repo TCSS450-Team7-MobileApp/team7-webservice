@@ -102,7 +102,7 @@ router.post("/", (request, response, next) => {
     pool.query(query, values)
         .then(result => {
             if (result.rowCount==0) {
-                response.username = result.rows[0];
+                response.username = result.rows[0].username;
                 next()
             }
         }).catch(error => {
