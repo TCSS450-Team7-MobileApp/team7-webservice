@@ -369,7 +369,7 @@ router.delete(
     (request, response, next) => {
         // middleware.checkToken will verify that a token holder is the requester
 
-        let query = `DELETE FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2) OR (MemberID_A=$2 AND MemberID_B=$1)`;
+        let query = `DELETE FROM Contacts WHERE (MemberID_A=$1 AND MemberID_B=$2)`;
         let values = [request.params.memberida, request.params.memberidb];
 
         pool.query(query, values)
@@ -378,6 +378,7 @@ router.delete(
                 .send({
                     message: jwt.decoded
                 })
+                next()
         })
         .catch((err) => {
             console.log('error deleting: ' + err);
@@ -385,6 +386,25 @@ router.delete(
                     message: 'Error deleting user from friendsList'
             });
         });
-});
+    },
+    (request, response, next) => {
+        let query = `DELETE FROM Contacts WHERE (MemberID_A=$2 AND MemberID_B=$1)`;
+        let values = [request.params.memberida, request.params.memberidb];
+
+        pool.query(query, values)
+        .then((result) => {
+                response.status(200)
+                .send({
+                    message: jwt.decoded
+                })
+                next()
+        })
+        .catch((err) => {
+            console.log('error deleting: ' + err);
+                response.status(400).send({
+                    message: 'Error deleting user from friendsList'
+            });
+        });
+    });
 
 module.exports = router;
