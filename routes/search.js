@@ -40,9 +40,9 @@ const router = express.Router();
     jwt.checkToken,
     (request, response) => {
         // Search for User
-        let query = ` SELECT DISTINCT FirstName, LastName, Username, MemberId as id, Email 
+        let query = `SELECT DISTINCT FirstName, LastName, Username, MemberId as id, Email 
         FROM Members FULL JOIN Contacts ON Members.MemberId = Contacts.MemberId_A 
-        WHERE Username ILIKE $1 AND MemberId_a != $2;`
+        WHERE Username ILIKE $1 AND Members.MemberID != $2`
         let values = [request.params.searched+'%', request.decoded.memberid];
 
         pool.query(query, values)
