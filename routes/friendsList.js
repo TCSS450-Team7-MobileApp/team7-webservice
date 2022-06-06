@@ -200,7 +200,7 @@ router.post(
             } else {
                 msg_functions.friendRequest(
                     result.rows[0].token,
-                    response.memberid_b,
+                    request.decoded.memberid,
                     response.username,
                     response.firstname,
                     response.lastname,
