@@ -120,7 +120,7 @@ router.post(
 
         // verify that the requested contact is a valid user
         let query = 'SELECT * FROM Members WHERE MemberID=$1';
-        let values = [request.body.memberid];
+        let values = [request.decoded.memberid];
 
         pool.query(query, values)
             .then((result) => {
