@@ -185,9 +185,9 @@ router.post(
             });
     }, (request, response) => {
     // Send a notification of this chat addition to ALL members with registered tokens
-    let query = `SELECT token FROM Push_Token
+    let query = `SELECT DISTINCT token FROM Push_Token
                 INNER JOIN Contacts ON
-                Push_Token.memberid = Contacts.memberid_a
+                Push_Token.memberid = Contacts.memberid_b
                 WHERE Contacts.memberid_b=$1`
     let values = [request.body.memberid]
 
@@ -198,17 +198,28 @@ router.post(
                     message: "No push token found, notification failed."
                 })
             } else {
-                result.rows.forEach((entry) => 
                 msg_functions.friendRequest(
-                    entry.token, 
+                    result.rows[0].token,
                     response.memberid_b,
                     response.username,
                     response.firstname,
                     response.lastname,
                     response.email,
                     response.verify
-                    )
+                )
+                /*
+                result.rows.forEach((entry) =>
+                    msg_functions.friendRequest(
+                        entry.token,
+                        response.memberid_b,
+                        response.username,
+                        response.firstname,
+                        response.lastname,
+                        response.email,
+                        response.verify
+                        )
                 );
+                */
                 response.status(200).send({
                     message: "Pushy requests sent",
                     success:true
@@ -335,7 +346,7 @@ router.post(
 
 /**
  * NOTE: THIS QUERY DOES NOT REQUIRE AUTHORIZATION
- * 
+ *
  * @api {put} /friendsList/delete/:memberid? Remove a friend from friend's list
  * @apiName deleteFriends
  * @apiGroup Friends
