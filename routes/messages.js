@@ -95,24 +95,6 @@ router.post("/", (request, response, next) => {
                 })
     
 }, (request, response, next) => {
-
-    let query = 'SELECT Username FROM Members WHERE MemberId=$1'
-    let values = [request.decoded.memberid]
-
-    pool.query(query, values)
-        .then(result => {
-            if (result.rowCount==0) {
-                response.username = result.rows[0].username;
-                next()
-            }
-        }).catch(error => {
-            response.status(400).send({
-                message: "Cannot get username!",
-                error: error
-            })
-        })
-        
-}, (request, response, next) => {
     //add the message to the database
     let insert = `INSERT INTO Messages(ChatId, Message, MemberId)
                   VALUES($1, $2, $3) 
@@ -124,7 +106,6 @@ router.post("/", (request, response, next) => {
                 //insertion success. Attach the message to the Response obj
                 response.message = result.rows[0]
                 response.message.email = request.decoded.email
-                //response.message.username = response.username
                 //Pass on to next to push
                 next()
             } else {
@@ -236,7 +217,7 @@ router.get("/:chatId?/:messageId?", (request, response, next) => {
             request.params.messageId = 2**31 - 1
         }
 
-        let query = `SELECT Messages.PrimaryKey AS messageId, Members.Username, Messages.Message, 
+        let query = `SELECT Messages.PrimaryKey AS messageId, Members.Email, Messages.Message, 
                     to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp
                     FROM Messages
                     INNER JOIN Members ON Messages.MemberId=Members.MemberId
