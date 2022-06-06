@@ -81,7 +81,6 @@ router.post("/", (request, response, next) => {
             pool.query(query, values)
                 .then(result => {
                     if (result.rowCount > 0) {
-                        response.username = result.rows[0].username
                         next()
                     } else {
                         response.status(400).send({
@@ -95,6 +94,24 @@ router.post("/", (request, response, next) => {
                     })
                 })
     
+}, (request, response, next) => {
+
+    let query = 'SELECT Username FROM Members WHERE MemberId=$1'
+    let values = [request.decoded.memberid]
+
+    pool.query(query, values)
+        .then(result => {
+            if (result.rowCount==0) {
+                response.username = result.rows[0];
+                next()
+            }
+        }).catch(error => {
+            response.status(400).send({
+                message: "Cannot get username!",
+                error: error
+            })
+        })
+        
 }, (request, response, next) => {
     //add the message to the database
     let insert = `INSERT INTO Messages(ChatId, Message, MemberId)
