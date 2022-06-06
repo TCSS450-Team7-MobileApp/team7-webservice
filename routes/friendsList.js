@@ -397,7 +397,6 @@ router.delete(
                 .send({
                     message: jwt.decoded
                 })
-                next()
         })
         .catch((err) => {
             console.log('error deleting: ' + err);
