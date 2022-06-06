@@ -129,7 +129,7 @@ router.post("/", (request, response, next) => {
         let values = [request.body.chatId]
         pool.query(query, values)
             .then(result => {
-                console.log(request.decoded.email)
+                console.log(request.decoded.username)
                 console.log(request.body.message)
                 result.rows.forEach(entry => 
                     msg_functions.sendMessageToIndividual(
@@ -217,7 +217,7 @@ router.get("/:chatId?/:messageId?", (request, response, next) => {
             request.params.messageId = 2**31 - 1
         }
 
-        let query = `SELECT Messages.PrimaryKey AS messageId, Members.Email, Messages.Message, 
+        let query = `SELECT Messages.PrimaryKey AS messageId, Members.Username, Messages.Message, 
                     to_char(Messages.Timestamp AT TIME ZONE 'PDT', 'YYYY-MM-DD HH24:MI:SS.US' ) AS Timestamp
                     FROM Messages
                     INNER JOIN Members ON Messages.MemberId=Members.MemberId
