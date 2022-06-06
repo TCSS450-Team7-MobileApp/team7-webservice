@@ -123,6 +123,7 @@ router.post("/", (request, response, next) => {
             if (result.rowCount == 1) {
                 //insertion success. Attach the message to the Response obj
                 response.message = result.rows[0]
+                response.message.email = request.decoded.email
                 response.message.username = response.username
                 //Pass on to next to push
                 next()
